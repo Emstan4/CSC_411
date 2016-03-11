@@ -74,7 +74,7 @@ mode_signal = 0
 #Initial Estimates
 Q_0 = [[0.],
        [0.]]
-constant = 10
+constant = 100
 P_0 = constant*np.array([[1,0],
                          [0,1]])
                          
@@ -84,7 +84,7 @@ Q = []
 Q2 = []
 R_1 = constant2*np.array([[200,-0.5],
                           [100,1]])   
-lambd = 0.95
+lambd = 1.0
 
 a = np.exp(-dt/tau)
 b = K*(1-a)
@@ -122,7 +122,7 @@ for i, t in enumerate(tspan):
      
     
     #Sampling the output signal and time instances
-    if t > next_time:
+    if t >= next_time:
         a_list.append(a)
         b_list.append(b)
         ym = y_1
@@ -133,7 +133,7 @@ for i, t in enumerate(tspan):
         K_t = (1/(lambd + product_2))*product_1  
         #print (product_2)
         P_t = (P_0 - np.dot(np.dot(K_t,phi_T), P_0))*(1/lambd) + R_1 
-        e_t = y[0,0] - np.dot(phi_T, Q_0) 
+        e_t = y - np.dot(phi_T, Q_0) 
         
         Q_t = Q_0 + e_t*K_t
         Q.append(Q_t[0,0])
@@ -141,7 +141,7 @@ for i, t in enumerate(tspan):
         Q_0 = Q_t
         P_0 = P_t
         
-        sampled_data.append(y[0,0])
+        sampled_data.append(y)
         input_signal_list.append(signal)
         t_sampling.append(t)
         phi_T = []
@@ -151,7 +151,7 @@ for i, t in enumerate(tspan):
     
     y1 = yd
     yd = Q_t[0][0]*y1 + Q_t[1][0]*signal2
-    yd_list.append(yd[0][0])
+    yd_list.append(yd)
     
     dzdt = A*z + B*signal    
     y = C*z + D*signal
