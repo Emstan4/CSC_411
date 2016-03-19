@@ -7,169 +7,132 @@ Created on Wed Feb 17 12:58:42 2016
 
 from __future__ import division
 import numpy as np
-from control.matlab import tf
-from matplotlib import pyplot as plot
-from numpy.linalg import lstsq
-from control.statesp import _convertToStateSpace
-# Exact Process Model
-K = 10
+from control import tf, ss
+from numpy import linalg
 
-numer = [1]
-denom = [5,1]
+# Exact Process Model
+K = 1
+tau = 5
+numer = [K]
+denom = [tau,1]
 sys1 = tf(numer,denom)
 
+Kc = 2
+tau_i = 5
+
+
+#PI controller
+controllerA = [Kc*tau_i, Kc]
+controllerB = [tau_i, 0]
+
+cont_sys1 = tf(controllerA, controllerB)
+cont_sys = ss(cont_sys1)
 #Transformation to State-Space
 
-sys = _convertToStateSpace(sys1)
+sys = ss(sys1)
 A, B, C, D = np.asarray(sys.A), np.asarray(sys.B), np.asarray(sys.C), \
     np.asarray(sys.D)
 
+contA, contB, contC, contD = np.asarray(cont_sys.A), np.asarray(cont_sys.B), np.asarray(cont_sys.C), \
+    np.asarray(cont_sys.D)
+    
 Nstates = A.shape[0]
+contNstates = contA.shape[0]
+
+z_cont = np.zeros((contNstates, 1))
 z = np.zeros((Nstates, 1))
 
 t_start = 0
-t_end = 20
-dt = 0.05
+t_end = 50
+dt = 0.1
 tspan = np.arange(t_start, t_end, dt)
 npoints = len(tspan)
 
 #List for storages
-yplot = np.zeros(npoints)
-ym_plot = np.zeros(npoints)
-
+yplot = []
+phi_T = []
 #sigma
-deviation = 0.5
+deviation = 1.0
 #Initial conditions
 z = 0
 y = 0
 
 #Sampling parameters
+
+delta = 1# sampling interval
 next_time = 0
-delta = 0.3 # sampling interval
+next_time2 = delta
 
-#new list of values to be  sampled
-sampled_data = []
-#sampling instances
-t_sampling = []
+y_sp = 1
 
-#Parameters for PRBS simulation
-next_time2 = 0
-#initial signal
-signal = 0
-
-#store values of PRBS signal
-sig_list = []
-
-#initialization of the counter
+a = np.exp(-delta/tau)
+b = K*(1 - a)
+a = np.exp(-delta/tau)
+b = K*(1-a)
+y_1 = 0
+u = u_1 = 0
 j = 0
 
-#storage of SAMPLED PRBS signal
-input_signal_list = [] 
-Kc = 7
+my_sum = np.zeros((2,2))
+my_sum2 = np.zeros((2,1))
+y_list = []
 
-def step(start, stepsize, tstep, t):
-    if t <= tstep:
-        return start
-    else:
-        return start + stepsize 
-
-mode_signal = 1
-Ysp = 1
+deviation = 0.5
+next_time3 = 0
+next_time4 = 2*delta
 for i, t in enumerate(tspan):
-    
-    
-        
     noise = deviation*np.random.rand()
-    #PRBS (setpoint)
-    if t >= next_time2:
-            #Alternator (1 and -1)
+    if t >= next_time3:
             cnt = (-1)**j
+            y_sp += 2*cnt
+            j += 1 
+            delta2 = 20
             
-            #add alternator to the initial signal 
-            Ysp += 2*cnt
+            next_time3 += delta2
             
-            #counter
-            j += 1
-            
-            #random generator for width/span of the signal 
-            delta2 = np.random.randint(1,4)
-            
-            next_time2 += delta2
-    #Sampling the output signal and time instances
-    if t > next_time:
-        ym = y[0,0]
-        sampled_data.append(y[0,0])
-        input_signal_list.append(Ysp)
-        t_sampling.append(t)
-        next_time += delta
-        
-    
-    dzdt = A*z + B*signal
-    y = C*z + D*signal
-    z += dzdt*dt
-    
-    # simulation of the PRBS signal\
-    if mode_signal == 0:
+    if t >= next_time:
         if t >= next_time2:
-            #Alternator (1 and -1)
-            cnt = (-1)**j
+            phi_T.append([y_1, u_1])
+
+            phi = np.matrix.transpose(np.array(phi_T))
+            y_list.append([y])
+            product = np.dot(phi, phi_T)
+            product2 = np.dot(phi, y_list)
+            my_sum += product
+            my_sum2 += product2
             
-            #add alternator to the initial signal 
-            signal += 2*cnt
-            
-            #counter
-            j += 1
-            
-            #random generator for width/span of the signal 
-            delta2 = np.random.randint(1,3)
-            
-            next_time2 += delta2
-    elif mode_signal == 1:
-        signal = Kc*(Ysp - y[0,0])
+            next_time2 += delta
+    
+
+        y_1 = y
+        u_1 = u
+        phi_T = []
+        y_list = []
         
-    yplot[i] = y[0,0]
-    ym_plot[i] = ym + noise
-    sig_list.append(Ysp)
-plot.subplot(2,1,2)
-plot.plot(tspan, ym_plot)
-plot.subplot(2,1,1)
-plot.plot(tspan, sig_list)
-plot.show()
+        
+        next_time += delta
+    if t >= next_time4:
+        r = linalg.inv(my_sum)
+        parameters = np.dot(r, my_sum2)
 
-AA=np.zeros((len(sampled_data),2)) 
-for i in range(len(sampled_data)):
-    AA[i][0]=sampled_data[i-1]
-    AA[i][1]=input_signal_list[i-1]
-    AA[0][0]= 0
-    AA[0][1]= 0
+        next_time4 += delta
+    yplot.append(y)
+    e = y_sp - y
     
-BB= np.zeros((len(sampled_data),1)) 
-for i in range(len(sampled_data)):
-    BB[i][0]= sampled_data[i]
+    dzcdt = contA*z_cont + contB*e
+    u = contC*z_cont + contD*e
+    u = u[0,0]
+        
+    dzdt = A*z + B*u
+    y = C*z + D*u
+    y = y[0,0]
+    y += noise
     
-    
-X = AA
-Y = BB
-    
-# transpose of matrix X
-Xt =  np.matrix.transpose(np.array(X))        
+    z += dzdt*dt
+    z_cont += dzcdt*dt
 
-#multiplication of matrix     
-mat1 = np.dot(Xt, X)
-mat2 = np.dot(Xt,Y)
-
-#identity matrix
-I = np.eye(len(mat1))
-
-#solve for the inverse matrix of mat1 above
-pre_beta = lstsq(mat1, I)[0]
-
-#solving the list of process parameters according to the difference equation
-beta = np.dot(pre_beta, mat2)
-print (beta)
-b = beta[1][0]/Kc
-a = beta[0][0] + b*Kc
-tau = -delta/np.log(a)
-print (tau)
-K = b/(1-a)
-print (K)
+r = linalg.inv(my_sum)
+parameters = np.dot(r, my_sum2)        
+   
+print ('a_esti =',parameters[0,0], 'b_esti = ', parameters[1,0] )
+print ('a_real =',a, 'b_real = ', b)
