@@ -210,8 +210,8 @@ a, b, c, d, e, f = parameters[:,0]
 
 bb1 = np.exp(-delta/2)
 bb2 = np.exp(-delta/3)
-ab1 = 1 - b1
-ab2 = 1 - b2
+ab1 = 1 - bb1
+ab2 = 1 - bb2
 
 
 ab_1 = bb1 + bb2
