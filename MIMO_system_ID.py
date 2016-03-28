@@ -76,7 +76,7 @@ input2 = 0
 
 next_timeA = 0
 next_timeB = delta
-next_timeC = 4*delta
+
 
 phi_T = []
 y_list = []
@@ -155,17 +155,7 @@ for i ,t in enumerate(tspan):
         
         
         next_timeA += delta
-    if t >= next_timeC:
-        r = linalg.det(my_sum)
-        s = linalg.inv(my_sum)
-        parameters = np.dot(s, my_sum2)
-        
-        r2 = linalg.det(my_sumB)
-        s2 = linalg.inv(my_sumB)
-        parameters2 = np.dot(s2, my_sumB2)
-        
-        next_timeC += delta
-    #-------------------------------------------------------
+    
     
     dzdt1 = A_G1*z_1 + B_G1*input1
     y1 = C_G1*z_1 + D_G1*input1
@@ -192,6 +182,14 @@ for i ,t in enumerate(tspan):
     
     yplot.append(y)
     ybplot.append(yb)
+    
+r = linalg.det(my_sum)
+s = linalg.inv(my_sum)
+parameters = np.dot(s, my_sum2)
+
+r2 = linalg.det(my_sumB)
+s2 = linalg.inv(my_sumB)
+parameters2 = np.dot(s2, my_sumB2)
     
 b1 = np.exp(-delta/5)
 b2 = np.exp(-delta/3)
