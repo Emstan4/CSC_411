@@ -110,20 +110,17 @@ tplot = []
 w_1 = 0
 w_list = []
 disturbance = 0
+
+period = (1/2*np.pi)*0.2
 for i, t in enumerate(tspan):
     w = u + disturbance
     noise = deviation*np.random.rand()
     w_list.append(w)
     yplot.append(y)
     tplot.append(t)
-    if t >= next_time3:
-            cnt = (-1)**j
-            disturbance += cnt
-            j += 1 
-            delta2 = 10
-            
-            next_time3 += delta2
-            
+    
+    disturbance = 0.5*scipy.signal.square(period*t, duty = 0.5)
+
     if t >= next_time:
         t_plot.append(t)
         Qplot_1.append(Q_0[0,0])
