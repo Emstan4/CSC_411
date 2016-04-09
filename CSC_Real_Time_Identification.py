@@ -73,7 +73,7 @@ Q = []
 Q2 = []
 lambd = 1.0
 
-a = np.exp(-deltat/tau)
+a = np.exp(-delta/tau)
 b = K*(1-a)
 Q_real = [[a],[b]]
 a_list = []
