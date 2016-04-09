@@ -80,16 +80,13 @@ y_list = []
 deviation = 0.5
 next_time3 = 0
 next_time4 = 2*delta
+
+period = (1/2*np.pi)*0.2
+
 for i, t in enumerate(tspan):
     noise = deviation*np.random.rand()
-    if t >= next_time3:
-            cnt = (-1)**j
-            y_sp += 2*cnt
-            j += 1 
-            delta2 = 20
-            
-            next_time3 += delta2
-            
+    signal = scipy.signal.square(period*t, duty = 0.5)
+    
     if t >= next_time:
         if t >= next_time2:
             phi_T.append([y_1, u_1])
