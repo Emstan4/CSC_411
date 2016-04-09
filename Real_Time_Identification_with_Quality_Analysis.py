@@ -100,27 +100,15 @@ R2 = []
 quality = 0
 quality2 = 0
 tplot = []
+
+period = (1/2*np.pi)*0.2
 for i, t in enumerate(tspan):
-    # simulation of the PRBS signal
+    
     yplot.append(y)
     sig_list.append(signal)
     tplot.append(t)
-    
-    if mode_signal == 0:
-        if t >= next_time2:
-            #Alternator (1 and -1)
-            cnt = (-1)**j
-            #add alternator to the initial signal 
-            signal += 2*cnt
-            #counter
-            j += 1
-            #random generator for width/span of the signal 
-            delta2 = 10
-            
-            next_time2 += delta2
-    elif mode_signal == 1:
-        signal = 1
-        
+    signal = scipy.signal.square(period*t, duty = 0.5)
+
     noise = deviation*np.random.rand()
     
     #Sampling the output signal and time instances
