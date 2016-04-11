@@ -9,6 +9,7 @@ from __future__ import division
 import numpy as np
 from control import tf, ss
 from numpy import linalg
+import scipy
 
 # Exact Process Model
 K = 1
