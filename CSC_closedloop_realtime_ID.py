@@ -9,7 +9,7 @@ from __future__ import division
 import numpy as np
 from control import tf, ss
 from matplotlib import pyplot as plot
-
+import scipy
 # Exact Process Model
 K = 1
 tau = 5
