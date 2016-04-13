@@ -68,7 +68,7 @@ tspan = np.arange(tstart, tend, dt)
 
 yplot = []
 ybplot = []
-sigma = 0.02
+sigma = 0.01
 
 next_time = 0
 j = 0
