@@ -9,7 +9,7 @@ from __future__ import division
 import numpy as np
 from control import tf, ss
 from matplotlib import pyplot as plot
-import scipy
+
 
 tau_1 = 5
 tau_2 = 2
@@ -89,7 +89,7 @@ z_3 = np.zeros((Nstates_G3, 1))
 z_4 = np.zeros((Nstates_G4, 1))   
 
 tstart = 0
-tend = 1000
+tend = 500
 dt = 0.01
 
 tspan = np.arange(tstart, tend, dt)
@@ -135,7 +135,7 @@ input2_1 = input2_2 = 0
 # Real time ID parameters
 
 Q_0 = np.zeros((6,1))
-sigma2 = 10000000000      
+sigma2 = 100000000000000      
 P_0 = sigma2*np.eye(6)
 lambd = 1.0
 
@@ -173,26 +173,35 @@ flist = []
 
 Q_t = np.zeros((6,1))
 
-period = (1/2*np.pi)*0.05
+period = (1/2*np.pi)*0.2
+u = u_1 = 0
+w_1 = w_2 = 0
+w_list = []
+disturbance = 0
+
+u2 = u2_1 = 0
+w2_1 = w2_2 = 0
+w2_list = []
 
 
-y1_sp = 0.0
-y2_sp = 0.0
-
-for i ,t in enumerate(tspan):            
+y1_sp = 1.0
+y2_sp = 1.0
+y4 = y1 = 0
+for i ,t in enumerate(tspan):        
+    w = u + disturbance 
+    w2 = u2 + disturbance
     noise = sigma*np.random.rand()    
-#    y1_sp = scipy.signal.square(period*t, duty = 0.5)
-#    y2_sp = scipy.signal.square(period*t, duty = 0.5)
     
-    
+    w_list.append(w)
+    w2_list.append(w2)
+   
     if t >= next_time:
         cnt = (-1)**j
-        y1_sp += 3*cnt 
-        y2_sp += 3*cnt
+        disturbance += 0.1*cnt 
         j += 1 
-        delta2 = 10
+        delta2 =10
         next_time += delta2
-    
+#    
     if t >= next_timeA:
         qlist_a.append(Q_t[0,0])
         qlist_b.append(Q_t[1,0])
@@ -209,20 +218,20 @@ for i ,t in enumerate(tspan):
         flist.append(-a_6)
         tlist.append(t)
         if t >= next_timeB:
-            phi_T.append([y_1, y_2, input1_1, input1_2, input2_1, input2_2])
+            phi_T.append([y_1, y_2, w_1, w_2, w2_1, w2_2])
 
             phi = np.matrix.transpose(np.array(phi_T))
-            y_list.append([y])
+            y_list.append([y1])
             product = np.dot(phi, phi_T)
             product2 = np.dot(phi, y_list)
             
             my_sum += product
             my_sum2 += product2
             
-            phi2_T.append([yb_1, yb_2, input1_1, input1_2, input2_1, input2_2])
+            phi2_T.append([yb_1, yb_2, w_1, w_2, w2_1, w2_2])
 
             phi2 = np.matrix.transpose(np.array(phi2_T))
-            y2_list.append([yb])
+            y2_list.append([y4])
 
             
             alpha = np.dot(np.dot(P_0,phi),np.dot(phi_T,P_0))
@@ -232,7 +241,7 @@ for i ,t in enumerate(tspan):
             
             
             K_t = np.dot(P_t,phi)
-            e_t = y - np.dot(phi_T,Q_0)
+            e_t = y1 - np.dot(phi_T,Q_0)
             Q_t = Q_0 + np.dot(K_t,e_t)
             Q_0 = Q_t
             P_0 = P_t
@@ -247,10 +256,14 @@ for i ,t in enumerate(tspan):
             next_timeB += delta
     
         y_2 = y_1
-        y_1 = y
+        y_1 = y1
+        w_2 = w_1
+        w_1 = w
         
+        w2_2 = w2_1
+        w2_1 = w2
         yb_2 = yb_1
-        yb_1 = yb
+        yb_1 = y4
         
         input1_2 = input1_1
         input2_2 = input2_1
@@ -281,23 +294,26 @@ for i ,t in enumerate(tspan):
     input1 = u
     input2 = u2
     
-    dzdt1 = A_G1*z_1 + B_G1*input1
-    y1 = C_G1*z_1 + D_G1*input1
+    dzdt1 = A_G1*z_1 + B_G1*w
+    y1 = C_G1*z_1 + D_G1*w
+    y1 = y1[0,0]
     
     dzdt2 = A_G2*z_2 + B_G2*input2
     y2 = C_G2*z_2 + D_G2*input2
+    y2 = y2[0,0]
     
     y = y1 + y2
-    y = y[0,0] + noise
+    y = y + noise
     
     dzdt3 = A_G3*z_3 + B_G3*input1
     y3 = C_G3*z_3 + D_G3*input1
-    
-    dzdt4 = A_G4*z_4 + B_G4*input2
-    y4 = C_G4*z_4 + D_G4*input2
+    y3 = y3[0,0]
+    dzdt4 = A_G4*z_4 + B_G4*w2
+    y4 = C_G4*z_4 + D_G4*w2
+    y4 = y4[0,0]
     
     yb = y3 + y4 
-    yb = yb[0,0] + noise
+    yb = yb + noise
     
     z_1 += dzdt1*dt
     z_2 += dzdt2*dt
@@ -337,5 +353,6 @@ plot.subplot(6,1,6)
 plot.plot(tlist, qlist_f, tlist, flist)
 plot.ylabel("$c_6$", fontsize = 20)
 plot.xlabel("time", fontsize = 20)
-#plot.plot(tspan, yplot,tspan, ybplot)
+#plot.plot(tspan, yplot, tspan, ybplot)
+#plot.plot(tspan, w_list)
 plot.show()
