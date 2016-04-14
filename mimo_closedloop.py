@@ -9,7 +9,7 @@ from __future__ import division
 import numpy as np
 from control import tf, ss
 from matplotlib import pyplot as plot
-import scipy
+
 
 tau_1 = 5
 tau_2 = 2
@@ -21,9 +21,13 @@ K_2 = 1
 K_3 = 1
 K_4 = 1
 
-Kc = 2
-tau_i = 5
+#controller 1
+Kc = 3
+tau_i = 3
 
+#controller 2
+Kc_2 = 1.0
+tau_i_2 = 6
 
 #PI controller
 controllerA = [Kc*tau_i, Kc]
@@ -31,6 +35,12 @@ controllerB = [tau_i, 0]
 
 cont_sys1 = tf(controllerA, controllerB)
 cont_sys = ss(cont_sys1)
+
+controllerA_2 = [Kc_2*tau_i_2, Kc_2]
+controllerB_2 = [tau_i_2, 0]
+
+cont_sys1_2 = tf(controllerA_2, controllerB_2)
+cont_sys_2 = ss(cont_sys1_2)
 
 #G1
 G1 = [[K_1],[tau_1,1]]
@@ -48,6 +58,9 @@ sys_G4 = ss(tf(G4[0],G4[1]))
 
 contA, contB, contC, contD = np.asarray(cont_sys.A), np.asarray(cont_sys.B), np.asarray(cont_sys.C), \
     np.asarray(cont_sys.D)
+    
+contA_2, contB_2, contC_2, contD_2 = np.asarray(cont_sys_2.A), np.asarray(cont_sys_2.B), np.asarray(cont_sys_2.C), \
+    np.asarray(cont_sys_2.D)
 
 A_G1, B_G1, C_G1, D_G1 = np.asarray(sys_G1.A), np.asarray(sys_G1.B), np.asarray(sys_G1.C), \
     np.asarray(sys_G1.D)
@@ -62,12 +75,14 @@ A_G4, B_G4, C_G4, D_G4 = np.asarray(sys_G4.A), np.asarray(sys_G4.B), np.asarray(
     np.asarray(sys_G4.D)
 
 contNstates = contA.shape[0]    
+contNstates_2 = contA_2.shape[0]
 Nstates_G1 = A_G1.shape[0]
 Nstates_G2 = A_G2.shape[0]
 Nstates_G3 = A_G3.shape[0]
 Nstates_G4 = A_G4.shape[0]
 
 z_cont = np.zeros((contNstates, 1))
+z_cont_2 = np.zeros((contNstates_2, 1))
 z_1 = np.zeros((Nstates_G1, 1))
 z_2 = np.zeros((Nstates_G2, 1)) 
 z_3 = np.zeros((Nstates_G3, 1)) 
@@ -92,7 +107,7 @@ delta = 1.0
 
 
 #input1 = 1.0
-input2 = 1.0
+#input2 = 1.0
 
 next_timeA = 0
 next_timeB = delta
@@ -158,7 +173,7 @@ flist = []
 
 Q_t = np.zeros((6,1))
 
-y1_sp = 0.5
+y1_sp = 1.0
 y2_sp = 1.0
 
 for i ,t in enumerate(tspan):            
@@ -248,13 +263,19 @@ for i ,t in enumerate(tspan):
     
     e = y1_sp - y
 
-    e2 = y1_sp - yb
+    e2 = y2_sp - yb
     
     dzcdt = contA*z_cont + contB*e
     u = contC*z_cont + contD*e
     u = u[0,0]
     input1 = u
 
+    dzcdt_2 = contA_2*z_cont_2 + contB_2*e2
+    u2 = contC_2*z_cont_2 + contD_2*e2
+    u2 = u2[0,0]
+    input1 = u
+    input2 = u2
+    
     dzdt1 = A_G1*z_1 + B_G1*input1
     y1 = C_G1*z_1 + D_G1*input1
     
@@ -278,6 +299,7 @@ for i ,t in enumerate(tspan):
     z_3 += dzdt3*dt
     z_4 += dzdt4*dt
     z_cont += dzcdt*dt
+    z_cont_2 += dzcdt_2*dt
     
     yplot.append(y)
     ybplot.append(yb)
@@ -310,5 +332,5 @@ for i ,t in enumerate(tspan):
 #plot.plot(tlist, qlist_f, tlist, flist)
 #plot.ylabel("$c_6$", fontsize = 20)
 #plot.xlabel("time", fontsize = 20)
-plot.plot(tspan, yplot, tspan, ybplot)
+plot.plot(tspan, yplot,tspan, ybplot)
 plot.show()
