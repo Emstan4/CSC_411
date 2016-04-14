@@ -27,14 +27,14 @@ Nstates = A.shape[0]
 z = np.zeros((Nstates, 1))
 
 t_start = 0
-t_end = 300
+t_end = 100
 dt = 0.01
 tspan = np.arange(t_start, t_end, dt)
 npoints = len(tspan)
 
 #List for storages
 yplot = []
-deviation = 0.4
+deviation = 0.2
 
 
 #Initial conditions
@@ -97,14 +97,15 @@ period = (1/2*np.pi)*0.2
 
 for i, t in enumerate(tspan):
     # simulation of a square signal
-    signal = scipy.signal.square(period*t, duty = 0.5)
+    signal = 0.5*scipy.signal.square(period*t, duty = 0.5)
     sig_list.append(signal)
     tplot.append(t)
-    yplot.append(y)
+   
     noise = deviation*np.random.rand()
 
     #Sampling the output signal and time instances
     if t >= next_time:
+        yplot.append(y)
         a_list.append(a)
         b_list.append(b)
         Q.append(Q_0[0,0])
@@ -155,7 +156,7 @@ for i, t in enumerate(tspan):
     z += dzdt*dt
     y = y[0,0]
     y = y + noise
-    yplot[i] = y
+    
 
 
 plot.subplot(2,2,1)
@@ -169,7 +170,7 @@ plot.xlabel("time")
 plot.ylabel("b", fontsize = 20)
 
 plot.subplot(2,2,2)
-plot.plot(tspan, yplot)
+plot.plot(t_sampling, yplot)
 plot.xlabel("time")
 plot.ylabel("Y(t)", fontsize = 20)
 

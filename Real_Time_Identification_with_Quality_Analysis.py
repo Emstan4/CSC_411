@@ -104,7 +104,7 @@ tplot = []
 period = (1/2*np.pi)*0.2
 for i, t in enumerate(tspan):
     
-    yplot.append(y)
+    
     sig_list.append(signal)
     tplot.append(t)
     signal = scipy.signal.square(period*t, duty = 0.5)
@@ -113,6 +113,7 @@ for i, t in enumerate(tspan):
     
     #Sampling the output signal and time instances
     if t >= next_time:
+        yplot.append(y)
         Q.append(Q_0[0,0])
         Q2.append(Q_0[1,0])
         t_sampling.append(t)
@@ -187,7 +188,7 @@ plot.xlabel("time")
 plot.ylabel("a", fontsize = 20)
 
 plot.subplot(2,2,2)
-plot.plot(tplot,yplot)
+plot.plot(t_sampling,yplot)
 plot.xlabel("time")
 plot.ylabel("Y(t)", fontsize = 20)
 

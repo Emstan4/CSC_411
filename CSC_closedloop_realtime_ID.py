@@ -115,13 +115,14 @@ period = (1/2*np.pi)*0.2
 for i, t in enumerate(tspan):
     w = u + disturbance
     noise = deviation*np.random.rand()
-    w_list.append(w)
-    yplot.append(y)
+    
     tplot.append(t)
     
     disturbance = 0.5*scipy.signal.square(period*t, duty = 0.5)
 
     if t >= next_time:
+        w_list.append(w)
+        yplot.append(y)
         t_plot.append(t)
         Qplot_1.append(Q_0[0,0])
         Qplot_2.append(Q_0[1,0])
@@ -207,15 +208,23 @@ for i, t in enumerate(tspan):
     z_cont += dzcdt*dt
     
 plot.subplot(2,2,4)    
-plot.plot(tplot,w_list)
+plot.plot(t_plot,w_list)
+plot.xlabel('time')
+plot.ylabel('w /input to process TF')
 
 plot.subplot(2,2,3) 
 plot.plot(t_plot, Qplot_2, t_plot, b_list)  
+plot.xlabel('time')
+plot.ylabel('b(t)')
 
 plot.subplot(2,2,2)    
-plot.plot(tplot,yplot)
+plot.plot(t_plot,yplot)
+
+plot.ylabel('y(t)')
 
 plot.subplot(2,2,1) 
 plot.plot(t_plot, Qplot_1, t_plot, a_list) 
+
+plot.ylabel('b(t)')
      
 plot.show() 
