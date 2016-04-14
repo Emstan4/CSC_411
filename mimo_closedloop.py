@@ -197,7 +197,7 @@ for i ,t in enumerate(tspan):
    
     if t >= next_time:
         cnt = (-1)**j
-        disturbance += 0.1*cnt 
+        disturbance += 1*cnt 
         j += 1 
         delta2 =10
         next_time += delta2
