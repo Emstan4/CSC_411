@@ -61,19 +61,19 @@ z_4 = np.zeros((Nstates_G4, 1))
 
 tstart = 0
 tend = 100
-dt = 0.01
+dt = 0.005
 
 tspan = np.arange(tstart, tend, dt)
 
 
 yplot = []
 ybplot = []
-sigma = 0.02
+sigma = 0.01
 
 next_time = 0
 j = 0
 
-delta = 0.5
+delta = 1.0
 
 
 
@@ -143,14 +143,17 @@ elist = []
 flist = []   
 
 Q_t = np.zeros((6,1))
+
 for i ,t in enumerate(tspan):            
-    noise = sigma*np.random.rand()        
+    noise = sigma*np.random.rand()  
+    
+    
     if t >= next_time:
         cnt = (-1)**j
         input1 += 2*cnt 
-        input2 -= 2*cnt
+        input2 += 2*cnt
         j += 1 
-        delta2 = 2        
+        delta2 = 10      
         next_time += delta2
     
     if t >= next_timeA:
@@ -225,8 +228,7 @@ for i ,t in enumerate(tspan):
         
         
         next_timeA += delta
-    
-    
+        
     dzdt1 = A_G1*z_1 + B_G1*input1
     y1 = C_G1*z_1 + D_G1*input1
     
