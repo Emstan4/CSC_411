@@ -21,6 +21,17 @@ K_2 = 1
 K_3 = 1
 K_4 = 1
 
+Kc = 2
+tau_i = 5
+
+
+#PI controller
+controllerA = [Kc*tau_i, Kc]
+controllerB = [tau_i, 0]
+
+cont_sys1 = tf(controllerA, controllerB)
+cont_sys = ss(cont_sys1)
+
 #G1
 G1 = [[K_1],[tau_1,1]]
 #G2
@@ -35,6 +46,8 @@ sys_G2 = ss(tf(G2[0],G2[1]))
 sys_G3 = ss(tf(G3[0],G3[1]))
 sys_G4 = ss(tf(G4[0],G4[1]))
 
+contA, contB, contC, contD = np.asarray(cont_sys.A), np.asarray(cont_sys.B), np.asarray(cont_sys.C), \
+    np.asarray(cont_sys.D)
 
 A_G1, B_G1, C_G1, D_G1 = np.asarray(sys_G1.A), np.asarray(sys_G1.B), np.asarray(sys_G1.C), \
     np.asarray(sys_G1.D)
@@ -48,12 +61,13 @@ A_G3, B_G3, C_G3, D_G3 = np.asarray(sys_G3.A), np.asarray(sys_G3.B), np.asarray(
 A_G4, B_G4, C_G4, D_G4 = np.asarray(sys_G4.A), np.asarray(sys_G4.B), np.asarray(sys_G4.C), \
     np.asarray(sys_G4.D)
 
-    
+contNstates = contA.shape[0]    
 Nstates_G1 = A_G1.shape[0]
 Nstates_G2 = A_G2.shape[0]
 Nstates_G3 = A_G3.shape[0]
 Nstates_G4 = A_G4.shape[0]
 
+z_cont = np.zeros((contNstates, 1))
 z_1 = np.zeros((Nstates_G1, 1))
 z_2 = np.zeros((Nstates_G2, 1)) 
 z_3 = np.zeros((Nstates_G3, 1)) 
@@ -68,17 +82,17 @@ tspan = np.arange(tstart, tend, dt)
 
 yplot = []
 ybplot = []
-sigma = 0.02
+sigma = 0.0
 
 next_time = 0
 j = 0
 
-delta = 0.5
+delta = 1.0
 
 
 
-input1 = 1.0
-input2 = 0
+#input1 = 1.0
+input2 = 1.0
 
 next_timeA = 0
 next_timeB = delta
@@ -144,93 +158,103 @@ flist = []
 
 Q_t = np.zeros((6,1))
 
-period = (1/2*np.pi)*0.2
+y1_sp = 0.5
+y2_sp = 1.0
+
 for i ,t in enumerate(tspan):            
     noise = sigma*np.random.rand()     
     
-    #input1 = scipy.signal.square(period*t, duty = 0.5)
-    if t >= next_time:
-        cnt = (-1)**j
-        input1 += 1*cnt 
-        input2 -= 1*cnt
-        j += 1 
-        delta2 = 7
-        next_time += delta2
     
-    if t >= next_timeA:
-        qlist_a.append(Q_t[0,0])
-        qlist_b.append(Q_t[1,0])
-        qlist_c.append(Q_t[2,0])
-        qlist_d.append(Q_t[3,0])
-        qlist_e.append(Q_t[4,0])
-        qlist_f.append(Q_t[5,0])
-        
-        alist.append(a_1)
-        blist.append(-a_2)
-        clist.append(a_3)
-        dlist.append(-a_4)
-        elist.append(a_5)
-        flist.append(-a_6)
-        tlist.append(t)
-        if t >= next_timeB:
-            phi_T.append([y_1, y_2, input1_1, input1_2, input2_1, input2_2])
+#    if t >= next_time:
+#        cnt = (-1)**j
+#        input1 += 2*cnt 
+#        input2 += 2*cnt
+#        j += 1 
+#        delta2 = 10
+#        next_time += delta2
+    
+#    if t >= next_timeA:
+#        qlist_a.append(Q_t[0,0])
+#        qlist_b.append(Q_t[1,0])
+#        qlist_c.append(Q_t[2,0])
+#        qlist_d.append(Q_t[3,0])
+#        qlist_e.append(Q_t[4,0])
+#        qlist_f.append(Q_t[5,0])
+#        
+#        alist.append(a_1)
+#        blist.append(-a_2)
+#        clist.append(a_3)
+#        dlist.append(-a_4)
+#        elist.append(a_5)
+#        flist.append(-a_6)
+#        tlist.append(t)
+#        if t >= next_timeB:
+#            phi_T.append([y_1, y_2, input1_1, input1_2, input2_1, input2_2])
+#
+#            phi = np.matrix.transpose(np.array(phi_T))
+#            y_list.append([y])
+#            product = np.dot(phi, phi_T)
+#            product2 = np.dot(phi, y_list)
+#            
+#            my_sum += product
+#            my_sum2 += product2
+#            
+#            phi2_T.append([yb_1, yb_2, input1_1, input1_2, input2_1, input2_2])
+#
+#            phi2 = np.matrix.transpose(np.array(phi2_T))
+#            y2_list.append([yb])
+#
+#            
+#            alpha = np.dot(np.dot(P_0,phi),np.dot(phi_T,P_0))
+#            beta = lambd + np.dot(np.dot(phi_T,P_0),phi)
+#            
+#            P_t = (P_0 - alpha/beta)/lambd
+#            
+#            
+#            K_t = np.dot(P_t,phi)
+#            e_t = y - np.dot(phi_T,Q_0)
+#            Q_t = Q_0 + np.dot(K_t,e_t)
+#            Q_0 = Q_t
+#            P_0 = P_t
+#            
+#            productB = np.dot(phi2, phi2_T)
+#            productB2 = np.dot(phi2, y2_list)
+#            
+#            my_sumB += productB
+#            my_sumB2 += productB2
+#            
+#            
+#            next_timeB += delta
+#    
+#        y_2 = y_1
+#        y_1 = y
+#        
+#        yb_2 = yb_1
+#        yb_1 = yb
+#        
+#        input1_2 = input1_1
+#        input2_2 = input2_1
+#        input1_1 = input1
+#        input2_1 = input2
+#        
+#        phi_T = []
+#        y_list = []
+#        
+#        phi2_T = []
+#        y2_list = []
+#        
+#        
+#        next_timeA += delta
+    
+    e = y1_sp - y
 
-            phi = np.matrix.transpose(np.array(phi_T))
-            y_list.append([y])
-            product = np.dot(phi, phi_T)
-            product2 = np.dot(phi, y_list)
-            
-            my_sum += product
-            my_sum2 += product2
-            
-            phi2_T.append([yb_1, yb_2, input1_1, input1_2, input2_1, input2_2])
+    e2 = y1_sp - yb
+    
+    dzcdt = contA*z_cont + contB*e
+    u = contC*z_cont + contD*e
+    u = u[0,0]
+    input1 = u
 
-            phi2 = np.matrix.transpose(np.array(phi2_T))
-            y2_list.append([yb])
-
-            
-            alpha = np.dot(np.dot(P_0,phi),np.dot(phi_T,P_0))
-            beta = lambd + np.dot(np.dot(phi_T,P_0),phi)
-            
-            P_t = (P_0 - alpha/beta)/lambd
-            
-            
-            K_t = np.dot(P_t,phi)
-            e_t = y - np.dot(phi_T,Q_0)
-            Q_t = Q_0 + np.dot(K_t,e_t)
-            Q_0 = Q_t
-            P_0 = P_t
-            
-            productB = np.dot(phi2, phi2_T)
-            productB2 = np.dot(phi2, y2_list)
-            
-            my_sumB += productB
-            my_sumB2 += productB2
-            
-            
-            next_timeB += delta
-    
-        y_2 = y_1
-        y_1 = y
-        
-        yb_2 = yb_1
-        yb_1 = yb
-        
-        input1_2 = input1_1
-        input2_2 = input2_1
-        input1_1 = input1
-        input2_1 = input2
-        
-        phi_T = []
-        y_list = []
-        
-        phi2_T = []
-        y2_list = []
-        
-        
-        next_timeA += delta
-    
-    
     dzdt1 = A_G1*z_1 + B_G1*input1
     y1 = C_G1*z_1 + D_G1*input1
     
@@ -253,6 +277,7 @@ for i ,t in enumerate(tspan):
     z_2 += dzdt2*dt
     z_3 += dzdt3*dt
     z_4 += dzdt4*dt
+    z_cont += dzcdt*dt
     
     yplot.append(y)
     ybplot.append(yb)
@@ -260,30 +285,30 @@ for i ,t in enumerate(tspan):
 
 #THESE PARAMETERS ARE FOR THE FIRST OUTPUT
 
-plot.subplot(6,1,1)
-plot.plot(tlist, qlist_a, tlist, alist)
-plot.ylabel("$c_1$", fontsize = 20)
-
-
-plot.subplot(6,1,2)
-plot.plot(tlist, qlist_b, tlist, blist)
-plot.ylabel("$c_2$", fontsize = 20)
-
-plot.subplot(6,1,3)
-plot.plot(tlist, qlist_c, tlist, clist)
-plot.ylabel("$c_3$", fontsize = 20)
-
-plot.subplot(6,1,4)
-plot.plot(tlist, qlist_d, tlist, dlist)
-plot.ylabel("$c_4$", fontsize = 20)
-
-plot.subplot(6,1,5)
-plot.plot(tlist, qlist_e, tlist, elist)
-plot.ylabel("$c_5$", fontsize = 20)
-
-plot.subplot(6,1,6)
-plot.plot(tlist, qlist_f, tlist, flist)
-plot.ylabel("$c_6$", fontsize = 20)
-plot.xlabel("time", fontsize = 20)
-
+#plot.subplot(6,1,1)
+#plot.plot(tlist, qlist_a, tlist, alist)
+#plot.ylabel("$c_1$", fontsize = 20)
+#
+#
+#plot.subplot(6,1,2)
+#plot.plot(tlist, qlist_b, tlist, blist)
+#plot.ylabel("$c_2$", fontsize = 20)
+#
+#plot.subplot(6,1,3)
+#plot.plot(tlist, qlist_c, tlist, clist)
+#plot.ylabel("$c_3$", fontsize = 20)
+#
+#plot.subplot(6,1,4)
+#plot.plot(tlist, qlist_d, tlist, dlist)
+#plot.ylabel("$c_4$", fontsize = 20)
+#
+#plot.subplot(6,1,5)
+#plot.plot(tlist, qlist_e, tlist, elist)
+#plot.ylabel("$c_5$", fontsize = 20)
+#
+#plot.subplot(6,1,6)
+#plot.plot(tlist, qlist_f, tlist, flist)
+#plot.ylabel("$c_6$", fontsize = 20)
+#plot.xlabel("time", fontsize = 20)
+plot.plot(tspan, yplot, tspan, ybplot)
 plot.show()
