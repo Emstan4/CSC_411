@@ -10,24 +10,23 @@ import numpy as np
 from control import tf, ss
 from matplotlib import pyplot as plot
 
-
-tau_1 = 5
+tau_1 = 1
 tau_2 = 2
 tau_3 = 3
 tau_4 = 4
 
 K_1 = 1
-K_2 = 1
-K_3 = 1
+K_2 = 0.9
+K_3 = 0.9
 K_4 = 1
 
 #controller 1
-Kc = 3
-tau_i = 3
+Kc = 1
+tau_i = 0.5
 
 #controller 2
-Kc_2 = 1.0
-tau_i_2 = 6
+Kc_2 = 1
+tau_i_2 = 2.5
 
 #PI controller
 controllerA = [Kc*tau_i, Kc]
@@ -88,6 +87,13 @@ z_2 = np.zeros((Nstates_G2, 1))
 z_3 = np.zeros((Nstates_G3, 1)) 
 z_4 = np.zeros((Nstates_G4, 1))   
 
+
+def step(init, step, tstep, t):
+    if t >= tstep:
+        return init + step
+    else:
+        return init
+        
 tstart = 0
 tend = 100
 dt = 0.01
@@ -106,8 +112,6 @@ delta = 1.0
 
 
 
-#input1 = 1.0
-#input2 = 1.0
 
 next_timeA = 0
 next_timeB = delta
@@ -173,94 +177,16 @@ flist = []
 
 Q_t = np.zeros((6,1))
 
-y1_sp = 1.0
-y2_sp = 1.0
+y1_sp = 0.5
+y2_sp = 0.2
 
+dist_list = []
 for i ,t in enumerate(tspan):            
     noise = sigma*np.random.rand()     
     
+    dist = step(0, 0.5, 60, t)
     
-#    if t >= next_time:
-#        cnt = (-1)**j
-#        input1 += 2*cnt 
-#        input2 += 2*cnt
-#        j += 1 
-#        delta2 = 10
-#        next_time += delta2
-    
-#    if t >= next_timeA:
-#        qlist_a.append(Q_t[0,0])
-#        qlist_b.append(Q_t[1,0])
-#        qlist_c.append(Q_t[2,0])
-#        qlist_d.append(Q_t[3,0])
-#        qlist_e.append(Q_t[4,0])
-#        qlist_f.append(Q_t[5,0])
-#        
-#        alist.append(a_1)
-#        blist.append(-a_2)
-#        clist.append(a_3)
-#        dlist.append(-a_4)
-#        elist.append(a_5)
-#        flist.append(-a_6)
-#        tlist.append(t)
-#        if t >= next_timeB:
-#            phi_T.append([y_1, y_2, input1_1, input1_2, input2_1, input2_2])
-#
-#            phi = np.matrix.transpose(np.array(phi_T))
-#            y_list.append([y])
-#            product = np.dot(phi, phi_T)
-#            product2 = np.dot(phi, y_list)
-#            
-#            my_sum += product
-#            my_sum2 += product2
-#            
-#            phi2_T.append([yb_1, yb_2, input1_1, input1_2, input2_1, input2_2])
-#
-#            phi2 = np.matrix.transpose(np.array(phi2_T))
-#            y2_list.append([yb])
-#
-#            
-#            alpha = np.dot(np.dot(P_0,phi),np.dot(phi_T,P_0))
-#            beta = lambd + np.dot(np.dot(phi_T,P_0),phi)
-#            
-#            P_t = (P_0 - alpha/beta)/lambd
-#            
-#            
-#            K_t = np.dot(P_t,phi)
-#            e_t = y - np.dot(phi_T,Q_0)
-#            Q_t = Q_0 + np.dot(K_t,e_t)
-#            Q_0 = Q_t
-#            P_0 = P_t
-#            
-#            productB = np.dot(phi2, phi2_T)
-#            productB2 = np.dot(phi2, y2_list)
-#            
-#            my_sumB += productB
-#            my_sumB2 += productB2
-#            
-#            
-#            next_timeB += delta
-#    
-#        y_2 = y_1
-#        y_1 = y
-#        
-#        yb_2 = yb_1
-#        yb_1 = yb
-#        
-#        input1_2 = input1_1
-#        input2_2 = input2_1
-#        input1_1 = input1
-#        input2_1 = input2
-#        
-#        phi_T = []
-#        y_list = []
-#        
-#        phi2_T = []
-#        y2_list = []
-#        
-#        
-#        next_timeA += delta
-    
+    dist_list.append(dist)
     e = y1_sp - y
 
     e2 = y2_sp - yb
@@ -273,11 +199,11 @@ for i ,t in enumerate(tspan):
     dzcdt_2 = contA_2*z_cont_2 + contB_2*e2
     u2 = contC_2*z_cont_2 + contD_2*e2
     u2 = u2[0,0]
-    input1 = u
+    
     input2 = u2
     
-    dzdt1 = A_G1*z_1 + B_G1*input1
-    y1 = C_G1*z_1 + D_G1*input1
+    dzdt1 = A_G1*z_1 + B_G1*(input1 + dist)
+    y1 = C_G1*z_1 + D_G1*(input1 + dist)
     
     dzdt2 = A_G2*z_2 + B_G2*input2
     y2 = C_G2*z_2 + D_G2*input2
@@ -288,8 +214,8 @@ for i ,t in enumerate(tspan):
     dzdt3 = A_G3*z_3 + B_G3*input1
     y3 = C_G3*z_3 + D_G3*input1
     
-    dzdt4 = A_G4*z_4 + B_G4*input2
-    y4 = C_G4*z_4 + D_G4*input2
+    dzdt4 = A_G4*z_4 + B_G4*(input2 + dist)
+    y4 = C_G4*z_4 + D_G4*(input2 + dist)
     
     yb = y3 + y4 
     yb = yb[0,0] + noise
@@ -305,32 +231,16 @@ for i ,t in enumerate(tspan):
     ybplot.append(yb)
     
 
-#THESE PARAMETERS ARE FOR THE FIRST OUTPUT
+plot.subplot(2,1,1)
+plot.plot(tspan, yplot, label = 'y_sp = 0.5')
+plot.plot(tspan, ybplot, label = 'y_sp = 0.1')
+plot.legend(loc = 'best')
+plot.ylabel('Y')
+plot.subplot(2,1,2)
+plot.plot(tspan, dist_list)
 
-#plot.subplot(6,1,1)
-#plot.plot(tlist, qlist_a, tlist, alist)
-#plot.ylabel("$c_1$", fontsize = 20)
-#
-#
-#plot.subplot(6,1,2)
-#plot.plot(tlist, qlist_b, tlist, blist)
-#plot.ylabel("$c_2$", fontsize = 20)
-#
-#plot.subplot(6,1,3)
-#plot.plot(tlist, qlist_c, tlist, clist)
-#plot.ylabel("$c_3$", fontsize = 20)
-#
-#plot.subplot(6,1,4)
-#plot.plot(tlist, qlist_d, tlist, dlist)
-#plot.ylabel("$c_4$", fontsize = 20)
-#
-#plot.subplot(6,1,5)
-#plot.plot(tlist, qlist_e, tlist, elist)
-#plot.ylabel("$c_5$", fontsize = 20)
-#
-#plot.subplot(6,1,6)
-#plot.plot(tlist, qlist_f, tlist, flist)
-#plot.ylabel("$c_6$", fontsize = 20)
-#plot.xlabel("time", fontsize = 20)
-plot.plot(tspan, yplot,tspan, ybplot)
+plot.xlabel('time')
+
+
+
 plot.show()
