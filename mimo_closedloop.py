@@ -11,23 +11,23 @@ from control import tf, ss
 from matplotlib import pyplot as plot
 
 
-tau_1 = 5
+tau_1 = 1
 tau_2 = 2
 tau_3 = 3
 tau_4 = 4
 
 K_1 = 1
-K_2 = 1
-K_3 = 1
+K_2 = 0.9
+K_3 = 0.9
 K_4 = 1
 
 #controller 1
-Kc = 3
-tau_i = 3
+Kc = 1
+tau_i = 5
 
 #controller 2
 Kc_2 = 1.0
-tau_i_2 = 6
+tau_i_2 = 10
 
 #PI controller
 controllerA = [Kc*tau_i, Kc]
@@ -89,7 +89,7 @@ z_3 = np.zeros((Nstates_G3, 1))
 z_4 = np.zeros((Nstates_G4, 1))   
 
 tstart = 0
-tend = 500
+tend =100
 dt = 0.01
 
 tspan = np.arange(tstart, tend, dt)
@@ -185,7 +185,7 @@ w2_list = []
 
 
 y1_sp = 1.0
-y2_sp = 1.0
+y2_sp = 0.5
 y4 = y1 = 0
 for i ,t in enumerate(tspan):        
     w = u + disturbance 
@@ -199,7 +199,7 @@ for i ,t in enumerate(tspan):
         cnt = (-1)**j
         disturbance += 1*cnt 
         j += 1 
-        delta2 =10
+        delta2 = 10
         next_time += delta2
 #    
     if t >= next_timeA:
@@ -328,31 +328,37 @@ for i ,t in enumerate(tspan):
 
 #THESE PARAMETERS ARE FOR THE FIRST OUTPUT
 
-plot.subplot(6,1,1)
+plot.subplot(4,2,1)
 plot.plot(tlist, qlist_a, tlist, alist)
 plot.ylabel("$c_1$", fontsize = 20)
 
 
-plot.subplot(6,1,2)
+plot.subplot(4,2,2)
 plot.plot(tlist, qlist_b, tlist, blist)
 plot.ylabel("$c_2$", fontsize = 20)
 
-plot.subplot(6,1,3)
+plot.subplot(4,2,3)
 plot.plot(tlist, qlist_c, tlist, clist)
 plot.ylabel("$c_3$", fontsize = 20)
 
-plot.subplot(6,1,4)
+plot.subplot(4,2,4)
 plot.plot(tlist, qlist_d, tlist, dlist)
 plot.ylabel("$c_4$", fontsize = 20)
 
-plot.subplot(6,1,5)
+plot.subplot(4,2,5)
 plot.plot(tlist, qlist_e, tlist, elist)
 plot.ylabel("$c_5$", fontsize = 20)
 
-plot.subplot(6,1,6)
+plot.subplot(4,2,6)
 plot.plot(tlist, qlist_f, tlist, flist)
 plot.ylabel("$c_6$", fontsize = 20)
 plot.xlabel("time", fontsize = 20)
-#plot.plot(tspan, yplot, tspan, ybplot)
-#plot.plot(tspan, w_list)
+plot.subplot(4,2,7)
+plot.plot(tspan, yplot, tspan, ybplot)
+plot.ylabel('Y')
+plot.xlabel('time')
+plot.subplot(4,2,8)
+plot.plot(tspan, w_list)
+plot.ylabel('w-input to process TF')
+plot.xlabel('time')
 plot.show()
