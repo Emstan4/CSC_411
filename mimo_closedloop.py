@@ -221,12 +221,9 @@ for i ,t in enumerate(tspan):
             phi_T.append([y_1, y_2, w_1, w_2, w2_1, w2_2])
 
             phi = np.matrix.transpose(np.array(phi_T))
-            y_list.append([y1])
+            #y_list.append([y1])
             product = np.dot(phi, phi_T)
-            product2 = np.dot(phi, y_list)
-            
-            my_sum += product
-            my_sum2 += product2
+            #product2 = np.dot(phi, y_list)
             
             phi2_T.append([yb_1, yb_2, w_1, w_2, w2_1, w2_2])
 
@@ -327,7 +324,7 @@ for i ,t in enumerate(tspan):
     
 
 #THESE PARAMETERS ARE FOR THE FIRST OUTPUT
-
+print Q_t
 plot.subplot(6,1,1)
 plot.plot(tlist, qlist_a, tlist, alist)
 plot.ylabel("$c_1$", fontsize = 20)
