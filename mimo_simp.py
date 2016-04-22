@@ -97,7 +97,7 @@ for i, t in enumerate(tspan):
     phi2_T.append([z_1, u_1, v_1])
     
     phi = np.matrix.transpose(np.array(phi_T))
-    phi2 = np.matrix.transpose(np.array(phi_T))
+    phi2 = np.matrix.transpose(np.array(phi2_T))
     
     y_list.append([y])
     z_list.append([z])
@@ -156,7 +156,7 @@ for i, t in enumerate(tspan):
         
     error[i] = (abs(np.array(outputs)[:,0] - np.array(outputs)[:,2])[i]) # error in the y-outputs(first)
     error2[i] = abs(np.array(outputs)[:,1] - np.array(outputs)[:,3])[i] # error in thez-outputs(second)
-    for k in range(20):
+    for k in range(10):
             recent_error_list.append([error[counter - k], error2[counter - k]])  
                 
     min_quality = np.min([1 - np.sum(recent_error_list[0]), 1 - np.sum(recent_error_list[1])])           
@@ -184,7 +184,7 @@ plot.ylabel('outputs')
 plot.subplot(2,2,3)
 plot.plot(tspan, Q_esti, tspan, Q2_esti)
 plot.plot(tspan, Q_real, 'k')
-plot.xlabel('time')
+plot.xlabel('time')              
 plot.ylabel('Parameters')
 plot.subplot(2,2,4)
 plot.plot(tspan, setpoints)
