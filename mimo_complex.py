@@ -23,7 +23,7 @@ tau_4, K_4 = 2,1
 
 T = 1.0
 tstart = 0
-tend = 100
+tend = 300
 tspan = np.arange(tstart, tend, T)
 
 b_1 = np.exp(-T/tau_1)
@@ -54,7 +54,9 @@ ff = -a_2*b_4
 outputs = []
 inputs = []
 para_estim = []
+para_estim2 = []
 para_real = []
+para_real2 = []
 
 y, y_1, y_2 = 0,0,0
 z, z_1, z_2 = 0,0,0
@@ -74,7 +76,7 @@ taub_d = 0.0
 e, e_1, e_2 = 0,0,0
 eb, eb_1, eb_2 = 0,0,0
 
-sigma = 0.02
+sigma = 0.015
 
 #identification
 #model: y(t) = a*y(t-1) + b*y(t-2) + c*u(t-1) + d*u(t-2) + e*v(t-1) + f*v(t-2)
@@ -94,8 +96,8 @@ phi2_T = []
 z_list = []
 next_time = 0
 j = 0
-ysp = 2
-ysp2 = 0
+ysp = 0.5
+ysp2 = 0.8
 for t in tspan:
     
     noise = sigma*np.random.rand()
@@ -103,17 +105,18 @@ for t in tspan:
     
     outputs.append([y, z, yk, zk])
     para_estim.append(Q_0.T[0])
+    para_estim2.append(Q2_0.T[0])
     para_real.append([a,b,c,d,e,f])
-#    ysp = step(0.7,0,0,t)
+    para_real2.append([aa,bb,cc,dd,ee,ff])
+#    ysp = step(0.7,0.5,50,t)
 #    ysp2 = step(1.,0,0,t)
     if t >= next_time:
         cnt = (-1)**j
-        ysp += 0.3*cnt 
-        ysp2 += 1*cnt
+        ysp += 1*cnt 
+        ysp2 += 0.5*cnt
         j += 1 
-        delta2 = 40
+        delta2 = 20
         next_time += delta2
-    
     
     #Identification-------------------------------------------
     phi_T.append([y_1, y_2, u_1, u_2, v_1, v_2])
@@ -186,8 +189,13 @@ for t in tspan:
 outputs = np.array(outputs)
 para_real = np.array(para_real)
 para_estim = np.array(para_estim)
-plot.subplot(2,1,1)
+plot.subplot(3,1,1)
 plot.plot(tspan, outputs)
-plot.subplot(2,1,2)
-plot.plot(tspan, para_estim, tspan, para_real)
+plot.subplot(3,1,2)
+#plot.plot(tspan, para_estim, 'b')
+plot.plot(tspan, para_estim2, 'r')
+plot.plot(tspan, para_real2, 'k')
+plot.subplot(3,1,3)
+plot.plot(tspan, para_estim, 'b')
+plot.plot(tspan, para_real, 'k')
 plot.show()
