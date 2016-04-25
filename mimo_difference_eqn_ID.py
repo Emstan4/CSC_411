@@ -53,6 +53,7 @@ ff = -a_2*b_4
 #lists        
 outputs = []
 inputs = []
+inputs = []
 para_estim = []
 para_estim2 = []
 para_real = []
@@ -104,6 +105,7 @@ for t in tspan:
     noise2 = sigma*np.random.rand()
     
     outputs.append([y, z, yk, zk])
+    inputs.append([ysp, ysp2])
     para_estim.append(Q_0.T[0])
     para_estim2.append(Q2_0.T[0])
     para_real.append([a,b,c,d,e,f])
@@ -187,21 +189,26 @@ for t in tspan:
     zk_2 = zk_1
     zk_1 = zk
 outputs = np.array(outputs)
+inputs = np.array(inputs)
 para_real = np.array(para_real)
 para_estim = np.array(para_estim)
-plot.subplot(3,1,1)
+plot.subplot(2,2,1)
 plot.plot(tspan, outputs[:,0], label = "$y$")
 plot.plot(tspan, outputs[:,1], label = "$z$")
 plot.plot(tspan, outputs[:,2], label = "$y_{predicted}$")
 plot.plot(tspan, outputs[:,3], label = "$z_{predicted}$")
 plot.ylabel("outputs")
 plot.legend(loc = "best")
-plot.subplot(3,1,2)
+plot.subplot(2,2,2)
+plot.plot(tspan, inputs[:,0], label = "$setpoint_y$")
+plot.plot(tspan, inputs[:,1], label = "$setpoint_z$")
+plot.ylabel("setpoints")
+plot.subplot(2,2,3)
 #plot.plot(tspan, para_estim, 'b')
 plot.plot(tspan, para_estim2, 'r')
 plot.plot(tspan, para_real2, 'k')
 plot.ylabel("parameters(z)")
-plot.subplot(3,1,3)
+plot.subplot(2,2,4)
 plot.plot(tspan, para_estim, 'b')
 plot.plot(tspan, para_real, 'k')
 plot.xlabel("time")
