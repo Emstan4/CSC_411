@@ -23,8 +23,9 @@ tau_4, K_4 = 2,1
 
 T = 1.0
 tstart = 0
-tend = 1000
+tend = 100
 tspan = np.arange(tstart, tend, T)
+npoints = len(tspan)
 
 b_1 = np.exp(-T/tau_1)
 b_2 = np.exp(-T/tau_2)
@@ -54,10 +55,10 @@ ff = -a_2*b_4
 outputs = []
 inputs = []
 inputs = []
-para_estim = []
-para_estim2 = []
-para_real = []
-para_real2 = []
+para_estim = np.zeros((npoints,6))
+para_estim2 = np.zeros((npoints,6))
+para_real = np.zeros((npoints,6))
+para_real2 = np.zeros((npoints,6))
 
 y, y_1, y_2 = 0,0,0
 z, z_1, z_2 = 0,0,0
@@ -99,17 +100,17 @@ next_time = 0
 j = 0
 ysp = 0.5
 ysp2 = 0.8
-for t in tspan:
+for i, t in enumerate(tspan):
     
     noise = sigma*np.random.rand()
     noise2 = sigma*np.random.rand()
     
     outputs.append([y, z, yk, zk])
     inputs.append([ysp, ysp2])
-    para_estim.append(Q_0.T[0])
-    para_estim2.append(Q2_0.T[0])
-    para_real.append([a,b,c,d,e,f])
-    para_real2.append([aa,bb,cc,dd,ee,ff])
+    para_estim[i] = Q_0.T[0]
+    para_estim2[i] = Q2_0.T[0]
+    para_real[i] = [a,b,c,d,e,f]
+    para_real2[i] = [aa,bb,cc,dd,ee,ff]
 #    ysp = step(0.7,0.5,50,t)
 #    ysp2 = step(1.,0,0,t)
     if t >= next_time:
@@ -147,7 +148,7 @@ for t in tspan:
     
     Q_t = Q_0 + np.dot(K_t,e_t)
     Q2_t = Q2_0 + np.dot(K2_t,e2_t)
-    
+    #print np.array(para_estim)
     Q_0 = Q_t
     P_0 = P_t
     
