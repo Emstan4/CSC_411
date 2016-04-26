@@ -23,7 +23,7 @@ tau_4, K_4 = 2,1
 
 T = 1.0
 tstart = 0
-tend = 100
+tend = 500
 tspan = np.arange(tstart, tend, T)
 npoints = len(tspan)
 
@@ -52,14 +52,16 @@ ee = a_2
 ff = -a_2*b_4
 
 #lists        
-outputs = []
+outputs = np.zeros((npoints, 4))
 inputs = []
-inputs = []
+controller_outputs = np.zeros((npoints, 4))
 para_estim = np.zeros((npoints,6))
 para_estim2 = np.zeros((npoints,6))
 para_real = np.zeros((npoints,6))
 para_real2 = np.zeros((npoints,6))
 
+
+yn, yn_1, yn_2 = 0,0,0
 y, y_1, y_2 = 0,0,0
 z, z_1, z_2 = 0,0,0
 u, u_1, u_2 = 0,0,0
@@ -78,7 +80,7 @@ taub_d = 0.0
 e, e_1, e_2 = 0,0,0
 eb, eb_1, eb_2 = 0,0,0
 
-sigma = 0.01
+sigma = 0.03
 
 #identification
 #model: y(t) = a*y(t-1) + b*y(t-2) + c*u(t-1) + d*u(t-2) + e*v(t-1) + f*v(t-2)
@@ -89,7 +91,7 @@ Q_0 = np.zeros((6,1))
 P_0 = sigma2*np.eye(6)
 Q2_0 = np.zeros((6,1))
 P2_0 = sigma2*np.eye(6)
-lambd = 1.0
+lambd = 0.99
 
 phi_T = []
 y_list = []
@@ -97,31 +99,38 @@ y_list = []
 phi2_T = []
 z_list = []
 next_time = 0
+next_time2 = 0
 j = 0
 ysp = 0.5
 ysp2 = 0.8
+
+counter = 0
+lst = []
 for i, t in enumerate(tspan):
     
     noise = sigma*np.random.rand()
     noise2 = sigma*np.random.rand()
     
-    outputs.append([y, z, yk, zk])
+    outputs[i] = [y, z, yk, zk]
     inputs.append([ysp, ysp2])
     para_estim[i] = Q_0.T[0]
     para_estim2[i] = Q2_0.T[0]
     para_real[i] = [a,b,c,d,e,f]
-    para_real2[i] = [aa,bb,cc,dd,ee,ff]
-#    ysp = step(0.7,0.5,50,t)
-#    ysp2 = step(1.,0,0,t)
+    para_real2[i] = [aa,bb,cc,dd,ee,ff]    
+        
+#    ysp = step(0.7,0.5,100,t)
+#    ysp2 = step(1.,-0.5,60,t)
+    
     if t >= next_time:
         cnt = (-1)**j
         ysp += 1.5*cnt 
-        ysp2 += 0.5*cnt
+        ysp2 +=0.3*cnt
         j += 1 
-        delta2 = 5
+        delta2 = 70
         next_time += delta2
     
     #Identification-------------------------------------------
+    
     phi_T.append([y_1, y_2, u_1, u_2, v_1, v_2])
     phi2_T.append([z_1, z_2, u_1, u_2, v_1, v_2])
     
@@ -155,11 +164,13 @@ for i, t in enumerate(tspan):
     Q2_0 = Q2_t
     P2_0 = P2_t
     
-    phi_T = []
-    y_list = []
-    phi2_T = []
-    z_list = []
+    
     ########################################################
+    if t >= next_time2:
+        q_sampled = Q_t
+        q_sampled2 = Q2_t
+        next_time2 += 50
+    
     e_2 = e_1
     e_1 = e
     er = ysp - y
@@ -179,16 +190,24 @@ for i, t in enumerate(tspan):
     u_1 = u
     v_2 = v_1
     v_1 = v
-        
-    y = a*y_1 + b*y_2 + c*u_1 + d*u_2 + e*v_1 + f*v_2 + noise
-    z = aa*z_1 + bb*z_2 + cc*u_1 + dd*u_2 + ee*v_1 + ff*v_2 + noise2
-    
-    yk = Q_t[0,0]*yk_1 + Q_t[1,0]*yk_2 + Q_t[2,0]*u_1 + Q_t[3,0]*u_2 + Q_t[4,0]*v_1 + Q_t[5,0]*v_2
-    zk = Q2_t[0,0]*zk_1 + Q2_t[1,0]*zk_2 + Q2_t[2,0]*u_1 + Q2_t[3,0]*u_2 + Q2_t[4,0]*v_1 + Q2_t[5,0]*v_2  
     yk_2 = yk_1
     yk_1 = yk
     zk_2 = zk_1
-    zk_1 = zk
+    zk_1 = zk         
+    y = np.dot([[y_1, y_2, u_1, u_2, v_1, v_2]],[[a],[b],[c],[d],[e],[f]])
+    z = np.dot([[z_1, z_2, u_1, u_2, v_1, v_2]],[[aa],[bb],[cc],[dd],[ee],[ff]])
+    y = y[0,0] + noise
+    z = z[0,0] + noise2
+    yk = np.dot([[yk_1, yk_2, u_1, u_2, v_1, v_2]], q_sampled)
+    yk = yk[0,0]
+    zk = np.dot([[zk_1, zk_2, u_1, u_2, v_1, v_2]], q_sampled2)  
+    zk = zk[0,0]    
+    phi_T = []
+    y_list = []
+    phi2_T = []
+    z_list = []
+    lst.append(q_sampled[0,0])
+    
 outputs = np.array(outputs)
 inputs = np.array(inputs)
 para_real = np.array(para_real)
@@ -199,7 +218,7 @@ plot.plot(tspan, outputs[:,1], label = "$z$")
 plot.plot(tspan, outputs[:,2], label = "$y_{predicted}$")
 plot.plot(tspan, outputs[:,3], label = "$z_{predicted}$")
 plot.ylabel("outputs")
-plot.legend(loc = "best")
+#plot.legend(loc = "best")
 plot.subplot(2,2,2)
 plot.plot(tspan, inputs[:,0], label = "$setpoint_y$")
 plot.plot(tspan, inputs[:,1], label = "$setpoint_z$")
