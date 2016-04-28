@@ -8,12 +8,16 @@ Created on Fri Apr 22 11:39:05 2016
 from __future__ import division
 import numpy as np
 from matplotlib import pyplot as plot
+import scipy
 
 def step(start, step, tstep, t):
     if t >= tstep:
         return start + step
     else:
         return start
+def square_wave(width, t):
+    period = (np.pi)/width
+    return scipy.signal.square(period*t, duty = 0.5)
         
 #process parameters
 tau_1, K_1 = 1,1
@@ -71,7 +75,7 @@ zk, zk_1, zk_2 = 0,0,0
 #controller
 Kc = 0.1
 tau_i = 5
-tau_d = 0.0
+tau_d = 0
 
 Kcb = 0.5
 taub_i = 2
@@ -99,13 +103,15 @@ z_list = []
 next_time = 0
 next_time2 = 0
 j = 0
-ysp = 0.5
-ysp2 = 0.8
+#ysp = 0.6
+#ysp2 = 0.8
 
 error_list = [1]
 quality_list = []
-
 error_sum = 1.0
+
+
+
 for i, t in enumerate(tspan):
     
     noise = sigma*np.random.rand()
@@ -117,15 +123,17 @@ for i, t in enumerate(tspan):
     para_estim2[i] = Q2_0.T[0]
     para_real[i] = [a,b,c,d,e,f]
     para_real2[i] = [aa,bb,cc,dd,ee,ff]            
-#    ysp = step(0.7,0.5,100,t)
-#    ysp2 = step(1.,-0.5,60,t)    
-    if t >= next_time:
-        cnt = (-1)**j
-        ysp += 1.5*cnt 
-        ysp2 +=0.3*cnt
-        j += 1 
-        delta2 = 20
-        next_time += delta2
+    ysp = step(0.7,0.0,100,t)
+    ysp2 = step(0.1,0.0,300,t) 
+    disturb = step(0.0,0.0,100,t)#0.01*square_wave(20,t)
+    disturb2 = 0#0.01*square_wave(20,t)
+#    if t >= next_time:
+#        cnt = (-1)**j
+#        ysp += 0.5*cnt 
+#        ysp2 +=0.1*cnt
+#        j += 1 
+#        delta2 = 20
+#        next_time += delta2
     
     #Identification-------------------------------------------
     
@@ -184,7 +192,8 @@ for i, t in enumerate(tspan):
     
     u = u_1 + Kc*((er-e_1) + (T/tau_i)*er + (tau_d/T)*(er - 2*e_1 + e_2)) 
     v = v_1 + Kcb*((eb-eb_1) + (T/taub_i)*eb + (taub_d/T)*(eb - 2*eb_1 + eb_2)) 
-    
+    u = u + disturb
+    v = u + disturb2
     y_2 = y_1
     y_1 = y
     z_2 = z_1
