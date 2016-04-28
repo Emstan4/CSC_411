@@ -60,7 +60,6 @@ para_estim2 = np.zeros((npoints,6))
 para_real = np.zeros((npoints,6))
 para_real2 = np.zeros((npoints,6))
 
-
 yn, yn_1, yn_2 = 0,0,0
 y, y_1, y_2 = 0,0,0
 z, z_1, z_2 = 0,0,0
@@ -80,18 +79,17 @@ taub_d = 0.0
 e, e_1, e_2 = 0,0,0
 eb, eb_1, eb_2 = 0,0,0
 
-sigma = 0.03
+sigma = 0.01
 
 #identification
 #model: y(t) = a*y(t-1) + b*y(t-2) + c*u(t-1) + d*u(t-2) + e*v(t-1) + f*v(t-2)
 #       z(t) = g*z(t-1) + h*z(t-2) + i*u(t-1) + j*u(t-2) + k*v(t-1) + l*v(t-2)
-
-sigma2 = 1000000000
+sigma2 = 2000000
 Q_0 = np.zeros((6,1))
 P_0 = sigma2*np.eye(6)
 Q2_0 = np.zeros((6,1))
 P2_0 = sigma2*np.eye(6)
-lambd = 0.99
+lambd = 1.0
 
 phi_T = []
 y_list = []
@@ -104,8 +102,10 @@ j = 0
 ysp = 0.5
 ysp2 = 0.8
 
-counter = 0
-lst = []
+error_list = [1]
+quality_list = []
+
+error_sum = 1.0
 for i, t in enumerate(tspan):
     
     noise = sigma*np.random.rand()
@@ -116,17 +116,15 @@ for i, t in enumerate(tspan):
     para_estim[i] = Q_0.T[0]
     para_estim2[i] = Q2_0.T[0]
     para_real[i] = [a,b,c,d,e,f]
-    para_real2[i] = [aa,bb,cc,dd,ee,ff]    
-        
+    para_real2[i] = [aa,bb,cc,dd,ee,ff]            
 #    ysp = step(0.7,0.5,100,t)
-#    ysp2 = step(1.,-0.5,60,t)
-    
+#    ysp2 = step(1.,-0.5,60,t)    
     if t >= next_time:
         cnt = (-1)**j
         ysp += 1.5*cnt 
         ysp2 +=0.3*cnt
         j += 1 
-        delta2 = 70
+        delta2 = 20
         next_time += delta2
     
     #Identification-------------------------------------------
@@ -157,7 +155,6 @@ for i, t in enumerate(tspan):
     
     Q_t = Q_0 + np.dot(K_t,e_t)
     Q2_t = Q2_0 + np.dot(K2_t,e2_t)
-    #print np.array(para_estim)
     Q_0 = Q_t
     P_0 = P_t
     
@@ -166,11 +163,17 @@ for i, t in enumerate(tspan):
     
     
     ########################################################
-    if t >= next_time2:
+    if t >= next_time2:        
+        error_sum = np.sum(error_list)
+#        if (1 - error_sum) >= 0.9:
+#            break
+        
+        error_list = []
         q_sampled = Q_t
         q_sampled2 = Q2_t
-        next_time2 += 50
-    
+        quality_list.append((1 - error_sum)) 
+        next_time2 += 19
+                   
     e_2 = e_1
     e_1 = e
     er = ysp - y
@@ -201,13 +204,19 @@ for i, t in enumerate(tspan):
     yk = np.dot([[yk_1, yk_2, u_1, u_2, v_1, v_2]], q_sampled)
     yk = yk[0,0]
     zk = np.dot([[zk_1, zk_2, u_1, u_2, v_1, v_2]], q_sampled2)  
-    zk = zk[0,0]    
+    zk = zk[0,0] 
+    
+    error = abs(yk - y)
+    error_list.append(error)
+    
     phi_T = []
     y_list = []
     phi2_T = []
     z_list = []
-    lst.append(q_sampled[0,0])
-    
+#print t    
+#print q_sampled.T
+#print np.array([[a],[b],[c],[d],[e],[f]]).T   
+plot.plot(quality_list) 
 outputs = np.array(outputs)
 inputs = np.array(inputs)
 para_real = np.array(para_real)
@@ -224,7 +233,6 @@ plot.plot(tspan, inputs[:,0], label = "$setpoint_y$")
 plot.plot(tspan, inputs[:,1], label = "$setpoint_z$")
 plot.ylabel("setpoints")
 plot.subplot(2,2,3)
-#plot.plot(tspan, para_estim, 'b')
 plot.plot(tspan, para_estim2, 'r')
 plot.plot(tspan, para_real2, 'k')
 plot.ylabel("parameters(z)")
