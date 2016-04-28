@@ -69,6 +69,8 @@ y, y_1, y_2 = 0,0,0
 z, z_1, z_2 = 0,0,0
 u, u_1, u_2 = 0,0,0
 v, v_1, v_2 = 0,0,0
+alp, alp_1, alp_2 = 0,0,0
+bet, bet_1, bet_2 = 0,0,0
 yk, yk_1, yk_2 = 0,0,0
 zk, zk_1, zk_2 = 0,0,0
 
@@ -88,7 +90,7 @@ sigma = 0.01
 #identification
 #model: y(t) = a*y(t-1) + b*y(t-2) + c*u(t-1) + d*u(t-2) + e*v(t-1) + f*v(t-2)
 #       z(t) = g*z(t-1) + h*z(t-2) + i*u(t-1) + j*u(t-2) + k*v(t-1) + l*v(t-2)
-sigma2 = 2000000
+sigma2 = 10000000000
 Q_0 = np.zeros((6,1))
 P_0 = sigma2*np.eye(6)
 Q2_0 = np.zeros((6,1))
@@ -103,37 +105,38 @@ z_list = []
 next_time = 0
 next_time2 = 0
 j = 0
-#ysp = 0.6
-#ysp2 = 0.8
+ysp = 0.6
+ysp2 = 0.8
 
 error_list = [1]
 quality_list = []
 error_sum = 1.0
 
 
-
+dist = 0.0
+dist2 = 0
 for i, t in enumerate(tspan):
     
     noise = sigma*np.random.rand()
     noise2 = sigma*np.random.rand()
     
     outputs[i] = [y, z, yk, zk]
-    inputs.append([ysp, ysp2])
+    inputs.append([ysp, ysp2, alp, bet])
     para_estim[i] = Q_0.T[0]
     para_estim2[i] = Q2_0.T[0]
     para_real[i] = [a,b,c,d,e,f]
     para_real2[i] = [aa,bb,cc,dd,ee,ff]            
     ysp = step(0.7,0.0,100,t)
     ysp2 = step(0.1,0.0,300,t) 
-    disturb = step(0.0,0.0,100,t)#0.01*square_wave(20,t)
-    disturb2 = 0#0.01*square_wave(20,t)
-#    if t >= next_time:
-#        cnt = (-1)**j
-#        ysp += 0.5*cnt 
-#        ysp2 +=0.1*cnt
-#        j += 1 
-#        delta2 = 20
-#        next_time += delta2
+#    dist = 0.05*square_wave(50,t)
+#    dist2 = -0.05*square_wave(20,t)
+    if t >= next_time:
+        cnt = (-1)**j
+        dist += 0.08*cnt 
+        dist2 +=0.01*cnt
+        j += 1 
+        delta2 = 20
+        next_time += delta2
     
     #Identification-------------------------------------------
     
@@ -189,15 +192,19 @@ for i, t in enumerate(tspan):
     eb_2 = eb_1
     eb_1 = eb
     eb = ysp2 - z
-    
+    alp = u + dist
+    bet = v + dist2
     u = u_1 + Kc*((er-e_1) + (T/tau_i)*er + (tau_d/T)*(er - 2*e_1 + e_2)) 
     v = v_1 + Kcb*((eb-eb_1) + (T/taub_i)*eb + (taub_d/T)*(eb - 2*eb_1 + eb_2)) 
-    u = u + disturb
-    v = u + disturb2
+    
     y_2 = y_1
     y_1 = y
     z_2 = z_1
     z_1 = z
+    alp_2 = alp_1
+    alp_1 = alp
+    bet_2 = bet_1
+    bet_1 = bet
     u_2 = u_1
     u_1 = u
     v_2 = v_1
@@ -206,13 +213,13 @@ for i, t in enumerate(tspan):
     yk_1 = yk
     zk_2 = zk_1
     zk_1 = zk         
-    y = np.dot([[y_1, y_2, u_1, u_2, v_1, v_2]],[[a],[b],[c],[d],[e],[f]])
-    z = np.dot([[z_1, z_2, u_1, u_2, v_1, v_2]],[[aa],[bb],[cc],[dd],[ee],[ff]])
+    y = np.dot([[y_1, y_2, alp_1, alp_2, bet_1, bet_2]],[[a],[b],[c],[d],[e],[f]])
+    z = np.dot([[z_1, z_2, alp_1, alp_2, bet_1, bet_2]],[[aa],[bb],[cc],[dd],[ee],[ff]])
     y = y[0,0] + noise
     z = z[0,0] + noise2
-    yk = np.dot([[yk_1, yk_2, u_1, u_2, v_1, v_2]], q_sampled)
+    yk = np.dot([[yk_1, yk_2, alp_1, alp_2, bet_1, bet_2]], q_sampled)
     yk = yk[0,0]
-    zk = np.dot([[zk_1, zk_2, u_1, u_2, v_1, v_2]], q_sampled2)  
+    zk = np.dot([[zk_1, zk_2, alp_1, alp_2, bet_1, bet_2]], q_sampled2)  
     zk = zk[0,0] 
     
     error = abs(yk - y)
@@ -238,8 +245,9 @@ plot.plot(tspan, outputs[:,3], label = "$z_{predicted}$")
 plot.ylabel("outputs")
 #plot.legend(loc = "best")
 plot.subplot(2,2,2)
-plot.plot(tspan, inputs[:,0], label = "$setpoint_y$")
-plot.plot(tspan, inputs[:,1], label = "$setpoint_z$")
+plot.plot(tspan, inputs)
+#plot.plot(tspan, inputs[:,0], label = "$setpoint_y$")
+#plot.plot(tspan, inputs[:,1], label = "$setpoint_z$")
 plot.ylabel("setpoints")
 plot.subplot(2,2,3)
 plot.plot(tspan, para_estim2, 'r')
