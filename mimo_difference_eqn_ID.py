@@ -126,22 +126,23 @@ for i, t in enumerate(tspan):
     para_estim2[i] = Q2_0.T[0]
     para_real[i] = [a,b,c,d,e,f]
     para_real2[i] = [aa,bb,cc,dd,ee,ff]            
-    ysp = step(0.7,0.0,100,t)
+    ysp = step(0.7,0.0,300,t)
     ysp2 = step(0.1,0.0,300,t) 
+    #dist = step(0.0,0.1,300,t)
 #    dist = 0.05*square_wave(50,t)
 #    dist2 = -0.05*square_wave(20,t)
     if t >= next_time:
         cnt = (-1)**j
-        dist += 0.08*cnt 
-        dist2 +=0.01*cnt
+        dist -= 0.1*cnt 
+        dist2 +=0.1*cnt
         j += 1 
         delta2 = 20
         next_time += delta2
     
     #Identification-------------------------------------------
     
-    phi_T.append([y_1, y_2, u_1, u_2, v_1, v_2])
-    phi2_T.append([z_1, z_2, u_1, u_2, v_1, v_2])
+    phi_T.append([y_1, y_2, alp_1, alp_2, bet_1, bet_2])
+    phi2_T.append([z_1, z_2, alp_1, alp_2, bet_1, bet_2])
     
     phi = np.matrix.transpose(np.array(phi_T))
     phi2 = np.matrix.transpose(np.array(phi2_T))
@@ -192,10 +193,12 @@ for i, t in enumerate(tspan):
     eb_2 = eb_1
     eb_1 = eb
     eb = ysp2 - z
-    alp = u + dist
-    bet = v + dist2
+    
     u = u_1 + Kc*((er-e_1) + (T/tau_i)*er + (tau_d/T)*(er - 2*e_1 + e_2)) 
     v = v_1 + Kcb*((eb-eb_1) + (T/taub_i)*eb + (taub_d/T)*(eb - 2*eb_1 + eb_2)) 
+    
+    alp = u + dist
+    bet = v + dist2
     
     y_2 = y_1
     y_1 = y
