@@ -9,6 +9,7 @@ from __future__ import division
 import numpy as np
 from matplotlib import pyplot as plot
 import scipy
+import random
 
 def step(start, step, tstep, t):
     if t >= tstep:
@@ -128,16 +129,12 @@ for i, t in enumerate(tspan):
     para_real2[i] = [aa,bb,cc,dd,ee,ff]            
     ysp = step(0.7,0.0,300,t)
     ysp2 = step(0.1,0.0,300,t) 
-    #dist = step(0.0,0.1,300,t)
-#    dist = 0.05*square_wave(50,t)
-#    dist2 = -0.05*square_wave(20,t)
-    if t >= next_time:
-        cnt = (-1)**j
-        dist -= 0.1*cnt 
-        dist2 +=0.1*cnt
-        j += 1 
-        delta2 = 20
-        next_time += delta2
+    
+    #PRBS of the disturbance
+    s = random.randint(10,30)
+    s2 = random.randint(10,30)
+    dist = 0.02*square_wave(s,t)
+    dist2 =0.02*square_wave(s2,t)
     
     #Identification-------------------------------------------
     
@@ -177,15 +174,15 @@ for i, t in enumerate(tspan):
     ########################################################
     if t >= next_time2:        
         error_sum = np.sum(error_list)
-#        if (1 - error_sum) >= 0.9:
-#            break
+        if (1 - error_sum) >= 0.85:
+            break
         
         error_list = []
         q_sampled = Q_t
         q_sampled2 = Q2_t
-        quality_list.append((1 - error_sum)) 
-        next_time2 += 19
-                   
+        
+        next_time2 += 40
+    quality_list.append((1 - error_sum))                
     e_2 = e_1
     e_1 = e
     er = ysp - y
@@ -232,33 +229,36 @@ for i, t in enumerate(tspan):
     y_list = []
     phi2_T = []
     z_list = []
-#print t    
-#print q_sampled.T
-#print np.array([[a],[b],[c],[d],[e],[f]]).T   
-plot.plot(quality_list) 
-outputs = np.array(outputs)
-inputs = np.array(inputs)
-para_real = np.array(para_real)
-para_estim = np.array(para_estim)
-plot.subplot(2,2,1)
-plot.plot(tspan, outputs[:,0], label = "$y$")
-plot.plot(tspan, outputs[:,1], label = "$z$")
-plot.plot(tspan, outputs[:,2], label = "$y_{predicted}$")
-plot.plot(tspan, outputs[:,3], label = "$z_{predicted}$")
-plot.ylabel("outputs")
-#plot.legend(loc = "best")
-plot.subplot(2,2,2)
-plot.plot(tspan, inputs)
-#plot.plot(tspan, inputs[:,0], label = "$setpoint_y$")
-#plot.plot(tspan, inputs[:,1], label = "$setpoint_z$")
-plot.ylabel("setpoints")
-plot.subplot(2,2,3)
-plot.plot(tspan, para_estim2, 'r')
-plot.plot(tspan, para_real2, 'k')
-plot.ylabel("parameters(z)")
-plot.subplot(2,2,4)
-plot.plot(tspan, para_estim, 'b')
-plot.plot(tspan, para_real, 'k')
-plot.xlabel("time")
-plot.ylabel("parameters(y)")
-plot.show()
+print t    
+print q_sampled.T
+print np.array([[a],[b],[c],[d],[e],[f]]).T   
+#plot.plot(quality_list) 
+#outputs = np.array(outputs)
+#inputs = np.array(inputs)
+#para_real = np.array(para_real)
+#para_estim = np.array(para_estim)
+#plot.subplot(2,2,1)
+#plot.plot(tspan, outputs[:,0], label = "$y$")
+#plot.plot(tspan, outputs[:,1], label = "$z$")
+#plot.plot(tspan, outputs[:,2], label = "$y_{predicted}$")
+#plot.plot(tspan, outputs[:,3], label = "$z_{predicted}$")
+#plot.ylabel("outputs")
+##plot.legend(loc = "best")
+#plot.subplot(2,2,2)
+#plot.plot(tspan, inputs)
+##plot.plot(tspan, inputs[:,0], label = "$setpoint_y$")
+##plot.plot(tspan, inputs[:,1], label = "$setpoint_z$")
+#plot.ylabel("setpoints")
+#plot.subplot(2,2,3)
+#plot.plot(tspan, para_estim2, 'r')
+#plot.plot(tspan, para_real2, 'k')
+#plot.ylabel("parameters(z)")
+#plot.subplot(2,2,4)
+#plot.plot(tspan, para_estim, 'b')
+#plot.plot(tspan, para_real, 'k')
+#plot.xlabel("time")
+#plot.ylabel("parameters(y)")
+
+#plot.plot(tspan, quality_list)
+#plot.ylim([0,1])
+#plot.show()
