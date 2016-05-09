@@ -142,6 +142,16 @@ my_sumA_2 = np.zeros((6,1))
 my_sumB_1 = np.zeros((6,6))
 my_sumB_2 = np.zeros((6,1))
 
+
+error = np.zeros(len(tspan))
+error2 = np.zeros(len(tspan)) 
+error3 = np.zeros(len(tspan))
+error4 = np.zeros(len(tspan)) 
+recent_error_list = []
+counter = 0
+quality = []
+
+residues = []
 for i, t in enumerate(tspan):
     
     noise = sigma*np.random.rand()
@@ -210,15 +220,31 @@ for i, t in enumerate(tspan):
     
     ########################################################
     if t >= next_time2:        
-        error_sum = np.sum(error_list)
+        #error_sum = np.sum(error_list)
 #        if (1 - error_sum) >= 0.85:
 #            break
         
-        error_list = []
+        #error_list = []
         q_sampled = Q_t
         q_sampled2 = Q2_t
         
-        next_time2 += 20
+        next_time2 += 30
+        
+    error[i] = abs(np.array(outputs)[:,0] - np.array(outputs)[:,2])[i] # error in the y-outputs(first)
+    error2[i] = abs(np.array(outputs)[:,0] - np.array(outputs)[:,4])[i] # error in thez-outputs(second)
+    error3[i] = abs(np.array(outputs)[:,1] - np.array(outputs)[:,3])[i]
+    error4[i] = abs(np.array(outputs)[:,1] - np.array(outputs)[:,5])[i]
+    for k in range(10):
+            recent_error_list.append([error[counter - k], error2[counter - k], error3[counter - k], error4[counter - k]])  
+    recent_error_list = np.array(recent_error_list)
+    
+    min_quality = np.min([1 - np.sum(recent_error_list.T[0]), 1 - np.sum(recent_error_list.T[1]), 1 - np.sum(recent_error_list.T[2]), 1 - np.sum(recent_error_list.T[3])])           
+    
+    quality.append([(1 - np.sum(recent_error_list.T[0])), (1 - np.sum(recent_error_list.T[1])), min_quality])
+    residues.append([np.sum(recent_error_list.T[0]),np.sum(recent_error_list.T[1]),np.sum(recent_error_list.T[2]),np.sum(recent_error_list.T[3])])
+    recent_error_list = []
+    counter += 1
+    
     quality_list.append((1 - error_sum))                
     e_2 = e_1
     e_1 = e
@@ -266,8 +292,8 @@ for i, t in enumerate(tspan):
     m = np.dot([m_1, m_2, alp_1, alp_2, bet_1, bet_2], para_offlineA.T)
     n = np.dot([n_1, n_2, alp_1, alp_2, bet_1, bet_2], para_offlineB.T)
     
-    error = abs(yk - y)
-    error_list.append(error)
+    #error = abs(yk - y)
+    #error_list.append(error)
     phi_T = []
     y_list = []
     phi2_T = []
@@ -276,6 +302,7 @@ for i, t in enumerate(tspan):
 #print q_sampled.T
 #print np.array([[a],[b],[c],[d],[e],[f]]).T   
 #plot.plot(quality_list) 
+quality = np.array(quality)
 my_sumA_inv = np.linalg.inv(my_sumA_1)
 parameters = np.dot(my_sumA_inv, my_sumA_2)  
 
@@ -290,30 +317,31 @@ outputs = np.array(outputs)
 inputs = np.array(inputs)
 para_real = np.array(para_real)
 para_estim = np.array(para_estim)
-plot.subplot(2,2,1)
+plot.subplot(5,1,1)
 plot.plot(tspan, outputs[:,0], label = "$y$")
 plot.plot(tspan, outputs[:,1], label = "$z$")
-plot.plot(tspan, outputs[:,2], label = "$y_{predicted}$", alpha = 0.5)
-plot.plot(tspan, outputs[:,3], label = "$z_{predicted}$", alpha = 0.5)
-plot.plot(tspan, outputs[:,4], label = "$z_{predicted}$")
-plot.plot(tspan, outputs[:,5], label = "$z_{predicted}$")
+plot.plot(tspan, outputs[:,2], label = "$y_{online}$", alpha = 0.5)
+plot.plot(tspan, outputs[:,3], label = "$z_{online}$", alpha = 0.5)
+plot.plot(tspan, outputs[:,4], label = "$y_{offline}$")
+plot.plot(tspan, outputs[:,5], label = "$z_{offline}$")
 plot.ylabel("outputs")
-#plot.legend(loc = "best")
-plot.subplot(2,2,2)
+plot.legend(loc = 4)
+plot.subplot(5,1,2)
 plot.plot(tspan, inputs)
-#plot.plot(tspan, inputs[:,0], label = "$setpoint_y$")
-#plot.plot(tspan, inputs[:,1], label = "$setpoint_z$")
-plot.ylabel("setpoints")
-plot.subplot(2,2,3)
+plot.plot(tspan, inputs[:,0], label = "$setpoint_y$")
+plot.plot(tspan, inputs[:,1], label = "$setpoint_z$")
+plot.ylabel("setpoints and inputs")
+plot.subplot(5,1,3)
 plot.plot(tspan, para_estim2, 'r')
 plot.plot(tspan, para_real2, 'k')
 plot.ylabel("parameters(z)")
-plot.subplot(2,2,4)
+plot.subplot(5,1,4)
 plot.plot(tspan, para_estim, 'b')
 plot.plot(tspan, para_real, 'k')
-plot.xlabel("time")
-plot.ylabel("parameters(y)")
 
-#plot.plot(tspan, quality_list)
-#plot.ylim([0,1])
-#plot.show()
+plot.ylabel("parameters(y)")
+plot.subplot(5,1,5)
+plot.plot(tspan, residues)
+plot.ylabel("errors")
+plot.xlabel("time")
+
