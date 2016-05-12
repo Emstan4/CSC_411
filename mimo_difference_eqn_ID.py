@@ -65,7 +65,7 @@ a = b_1 + b_3
 b = -b_1*b_3
 c = a_1
 d = -a_1*b_3
-e = a_3
+eq = a_3
 f = -a_3*b_1
 
 aa = b_4 + b_2
@@ -161,7 +161,7 @@ for i, t in enumerate(tspan):
     inputs.append([ysp, ysp2, alp, bet])
     para_estim[i] = Q_0.T[0]
     para_estim2[i] = Q2_0.T[0]
-    para_real[i] = [a,b,c,d,e,f]
+    para_real[i] = [a,b,c,d,eq,f]
     para_real2[i] = [aa,bb,cc,dd,ee,ff]            
     ysp = step(0.7,0.0,300,t)
     ysp2 = step(0.1,0.0,300,t) 
@@ -281,7 +281,7 @@ for i, t in enumerate(tspan):
     n_2 = n_1
     n_1 = n
       
-    y = np.dot([[y_1, y_2, alp_1, alp_2, bet_1, bet_2]],[[a],[b],[c],[d],[e],[f]])
+    y = np.dot([[y_1, y_2, alp_1, alp_2, bet_1, bet_2]],[[a],[b],[c],[d],[eq],[f]])
     z = np.dot([[z_1, z_2, alp_1, alp_2, bet_1, bet_2]],[[aa],[bb],[cc],[dd],[ee],[ff]])
     y = y[0,0] + noise
     z = z[0,0] + noise2
