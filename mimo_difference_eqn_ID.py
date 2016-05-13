@@ -9,6 +9,7 @@ from __future__ import division
 import numpy as np
 from matplotlib import pyplot as plot
 import scipy
+from scipy import signal
 import csv
 
 def step(start, step, tstep, t):
@@ -47,7 +48,7 @@ tau_4, K_4 = 2,1
 
 T = 1.0
 tstart = 0
-tend = 500
+tend = 100
 tspan = np.arange(tstart, tend, T)
 npoints = len(tspan)
 
@@ -158,7 +159,7 @@ for i, t in enumerate(tspan):
     noise2 = sigma*np.random.rand()
     
     outputs[i] = [y, z, yk, zk, m, n]
-    inputs.append([ysp, ysp2, alp, bet])
+    inputs.append([alp, bet])
     para_estim[i] = Q_0.T[0]
     para_estim2[i] = Q2_0.T[0]
     para_real[i] = [a,b,c,d,eq,f]
@@ -167,10 +168,10 @@ for i, t in enumerate(tspan):
     ysp2 = step(0.1,0.0,300,t) 
     
     #PRBS of the disturbance
-    s = np.random.randint(10,30)
-    s2 = np.random.randint(10,30)
-    dist = 0.02*square_wave(s,t)
-    dist2 =0.02*square_wave(s2,t)
+    s = np.random.randint(10,20)
+    s2 = np.random.randint(10,20)
+    dist = -0.8*square_wave(s,t)
+    dist2 =1*square_wave(s2,t)
     
     #Identification-------------------------------------------
     
@@ -254,8 +255,8 @@ for i, t in enumerate(tspan):
     eb_1 = eb
     eb = ysp2 - z
     
-    u = u_1 + Kc*((er-e_1) + (T/tau_i)*er + (tau_d/T)*(er - 2*e_1 + e_2)) 
-    v = v_1 + Kcb*((eb-eb_1) + (T/taub_i)*eb + (taub_d/T)*(eb - 2*eb_1 + eb_2)) 
+    u = step(0,0,200,t)#u_1 + Kc*((er-e_1) + (T/tau_i)*er + (tau_d/T)*(er - 2*e_1 + e_2)) 
+    v = step(0,0,300,t)#v_1 + Kcb*((eb-eb_1) + (T/taub_i)*eb + (taub_d/T)*(eb - 2*eb_1 + eb_2)) 
     
     alp = u + dist
     bet = v + dist2
@@ -309,39 +310,43 @@ parameters = np.dot(my_sumA_inv, my_sumA_2)
 my_sumB_inv = np.linalg.inv(my_sumB_1)
 parametersB = np.dot(my_sumB_inv, my_sumB_2) 
 
-    
+print parameters
+print parametersB  
+#print aa,bb,cc,dd,ee,ff
 writefile(parameters, "off_para1.csv")
 writefile(parametersB, "off_para2.csv")
 
 outputs = np.array(outputs)
 inputs = np.array(inputs)
-para_real = np.array(para_real)
-para_estim = np.array(para_estim)
-plot.subplot(5,1,1)
+#para_real = np.array(para_real)
+#para_estim = np.array(para_estim)
+plot.subplot(2,1,1)
 plot.plot(tspan, outputs[:,0], label = "$y$")
 plot.plot(tspan, outputs[:,1], label = "$z$")
-plot.plot(tspan, outputs[:,2], label = "$y_{online}$", alpha = 0.5)
-plot.plot(tspan, outputs[:,3], label = "$z_{online}$", alpha = 0.5)
+#plot.plot(tspan, outputs[:,2], label = "$y_{online}$", alpha = 0.5)
+#plot.plot(tspan, outputs[:,3], label = "$z_{online}$", alpha = 0.5)
 plot.plot(tspan, outputs[:,4], label = "$y_{offline}$")
 plot.plot(tspan, outputs[:,5], label = "$z_{offline}$")
 plot.ylabel("outputs")
 plot.legend(loc = 4)
-plot.subplot(5,1,2)
-plot.plot(tspan, inputs)
-plot.plot(tspan, inputs[:,0], label = "$setpoint_y$")
-plot.plot(tspan, inputs[:,1], label = "$setpoint_z$")
-plot.ylabel("setpoints and inputs")
-plot.subplot(5,1,3)
-plot.plot(tspan, para_estim2, 'r')
-plot.plot(tspan, para_real2, 'k')
-plot.ylabel("parameters(z)")
-plot.subplot(5,1,4)
-plot.plot(tspan, para_estim, 'b')
-plot.plot(tspan, para_real, 'k')
-
-plot.ylabel("parameters(y)")
-plot.subplot(5,1,5)
-plot.plot(tspan, residues)
-plot.ylabel("errors")
+plot.subplot(2,1,2)
+plot.plot(tspan, inputs[:,0], label = "$Input_1$")
+plot.plot(tspan, inputs[:,1], label = "$Input_2$")
+#plot.plot(tspan, inputs[:,0], label = "$setpoint_y$")
+#plot.plot(tspan, inputs[:,1], label = "$setpoint_z$")
+plot.ylabel("Inputs")
+plot.legend(loc = 4)
+#plot.subplot(5,1,3)
+#plot.plot(tspan, para_estim2, 'r')
+#plot.plot(tspan, para_real2, 'k')
+#plot.ylabel("parameters(z)")
+#plot.subplot(5,1,4)
+#plot.plot(tspan, para_estim, 'b')
+#plot.plot(tspan, para_real, 'k')
+#
+#plot.ylabel("parameters(y)")
+#plot.subplot(5,1,5)
+#plot.plot(tspan, residues)
+#plot.ylabel("errors")
 plot.xlabel("time")
 

@@ -9,6 +9,7 @@ from __future__ import division
 import numpy as np
 from matplotlib import pyplot as plot
 import scipy
+from scipy import signal
 import csv
 
 def step(start, step, tstep, t):
