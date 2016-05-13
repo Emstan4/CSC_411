@@ -164,14 +164,14 @@ for i, t in enumerate(tspan):
     para_estim2[i] = Q2_0.T[0]
     para_real[i] = [a,b,c,d,eq,f]
     para_real2[i] = [aa,bb,cc,dd,ee,ff]            
-    ysp = step(0.7,0.0,300,t)
-    ysp2 = step(0.1,0.0,300,t) 
+    ysp = step(1.0,-0.0,70,t)
+    ysp2 = step(0.5,0.0,50,t) 
     
     #PRBS of the disturbance
     s = np.random.randint(10,20)
     s2 = np.random.randint(10,20)
-    dist = -0.8*square_wave(s,t)
-    dist2 =1*square_wave(s2,t)
+    dist = 0.8*square_wave(s,t)
+    dist2 = 1*square_wave(s2,t)
     
     #Identification-------------------------------------------
     
@@ -229,7 +229,7 @@ for i, t in enumerate(tspan):
         q_sampled = Q_t
         q_sampled2 = Q2_t
         
-        next_time2 += 30
+        next_time2 += 5
         
     error[i] = abs(np.array(outputs)[:,0] - np.array(outputs)[:,2])[i] # error in the y-outputs(first)
     error2[i] = abs(np.array(outputs)[:,0] - np.array(outputs)[:,4])[i] # error in thez-outputs(second)
@@ -242,7 +242,7 @@ for i, t in enumerate(tspan):
     min_quality = np.min([1 - np.sum(recent_error_list.T[0]), 1 - np.sum(recent_error_list.T[1]), 1 - np.sum(recent_error_list.T[2]), 1 - np.sum(recent_error_list.T[3])])           
     
     quality.append([(1 - np.sum(recent_error_list.T[0])), (1 - np.sum(recent_error_list.T[1])), min_quality])
-    residues.append([np.sum(recent_error_list.T[0]),np.sum(recent_error_list.T[1]),np.sum(recent_error_list.T[2]),np.sum(recent_error_list.T[3])])
+    residues.append([np.sum(recent_error_list.T[0])**2,np.sum(recent_error_list.T[1])**2,np.sum(recent_error_list.T[2])**2,np.sum(recent_error_list.T[3])**2])
     recent_error_list = []
     counter += 1
     
@@ -255,8 +255,8 @@ for i, t in enumerate(tspan):
     eb_1 = eb
     eb = ysp2 - z
     
-    u = step(0,0,200,t)#u_1 + Kc*((er-e_1) + (T/tau_i)*er + (tau_d/T)*(er - 2*e_1 + e_2)) 
-    v = step(0,0,300,t)#v_1 + Kcb*((eb-eb_1) + (T/taub_i)*eb + (taub_d/T)*(eb - 2*eb_1 + eb_2)) 
+    u =0#u_1 + Kc*((er-e_1) + (T/tau_i)*er + (tau_d/T)*(er - 2*e_1 + e_2)) 
+    v =0#v_1 + Kcb*((eb-eb_1) + (T/taub_i)*eb + (taub_d/T)*(eb - 2*eb_1 + eb_2)) 
     
     alp = u + dist
     bet = v + dist2
@@ -320,33 +320,40 @@ outputs = np.array(outputs)
 inputs = np.array(inputs)
 #para_real = np.array(para_real)
 #para_estim = np.array(para_estim)
+
+light_online = 1
+light_offline = 0.7
 plot.subplot(2,1,1)
-plot.plot(tspan, outputs[:,0], label = "$y$")
+plot.plot(tspan, outputs[:,0],label = "$y$")
 plot.plot(tspan, outputs[:,1], label = "$z$")
-#plot.plot(tspan, outputs[:,2], label = "$y_{online}$", alpha = 0.5)
-#plot.plot(tspan, outputs[:,3], label = "$z_{online}$", alpha = 0.5)
-plot.plot(tspan, outputs[:,4], label = "$y_{offline}$")
-plot.plot(tspan, outputs[:,5], label = "$z_{offline}$")
+#plot.plot(tspan, outputs[:,2], label = "$y_{online}$", alpha = light_online)
+#plot.plot(tspan, outputs[:,3], label = "$z_{online}$", alpha = light_online)
+plot.plot(tspan, outputs[:,4], label = "$y_{offline}$", alpha = light_offline)
+plot.plot(tspan, outputs[:,5], label = "$z_{offline}$", alpha = light_offline)
 plot.ylabel("outputs")
 plot.legend(loc = 4)
 plot.subplot(2,1,2)
-plot.plot(tspan, inputs[:,0], label = "$Input_1$")
-plot.plot(tspan, inputs[:,1], label = "$Input_2$")
+plot.plot(tspan, inputs[:,0], label = "$Controller$ $Output_1$")
+plot.plot(tspan, inputs[:,1], label = "$Controller$ $Output_2$")
 #plot.plot(tspan, inputs[:,0], label = "$setpoint_y$")
 #plot.plot(tspan, inputs[:,1], label = "$setpoint_z$")
 plot.ylabel("Inputs")
 plot.legend(loc = 4)
-#plot.subplot(5,1,3)
+#plot.subplot(4,1,3)
 #plot.plot(tspan, para_estim2, 'r')
 #plot.plot(tspan, para_real2, 'k')
-#plot.ylabel("parameters(z)")
-#plot.subplot(5,1,4)
+#plot.ylabel("parameters(y_2)")
+##plot.ylim([0.54,1.22])
+#plot.subplot(4,1,4)
 #plot.plot(tspan, para_estim, 'b')
 #plot.plot(tspan, para_real, 'k')
+##
+#plot.ylabel("parameters(y_1)")
 #
-#plot.ylabel("parameters(y)")
-#plot.subplot(5,1,5)
-#plot.plot(tspan, residues)
-#plot.ylabel("errors")
+##plot.ylim([-0.5,1.43])
+##plot.subplot(5,1,5)
+##plot.plot(tspan, residues)
+##plot.ylabel("errors")
+##plot.ylim([0,1])
 plot.xlabel("time")
 
