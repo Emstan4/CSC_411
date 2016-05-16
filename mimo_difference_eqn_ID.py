@@ -12,6 +12,9 @@ import scipy
 from scipy import signal
 import csv
 
+tlist = []
+ilist = []
+#for o in range(6,50):
 def step(start, step, tstep, t):
     if t >= tstep:
         return start + step
@@ -48,7 +51,7 @@ tau_4, K_4 = 2,1
 
 T = 1.0
 tstart = 0
-tend = 200
+tend = 100
 tspan = np.arange(tstart, tend, T)
 npoints = len(tspan)
 
@@ -107,7 +110,7 @@ taub_d = 0.0
 e, e_1, e_2 = 0,0,0
 eb, eb_1, eb_2 = 0,0,0
 
-sigma = 0.02
+sigma = 0.01
 
 #identification
 #model: y(t) = a*y(t-1) + b*y(t-2) + c*u(t-1) + d*u(t-2) + e*v(t-1) + f*v(t-2)
@@ -231,20 +234,19 @@ for i, t in enumerate(tspan):
     
     ########################################################
     if t >= next_time2:        
-        #error_sum = np.sum(error_list)
-#        if (1 - error_sum) >= 0.85:
-#            break
-        
-        #error_list = []
+
         q_sampled = Q_t
         q_sampled2 = Q2_t
         
-        next_time2 += 2
-        
-    error[i] = abs(np.array(outputs)[:,0] - np.array(outputs)[:,2])[i] # error in the y-outputs(first)
-    error2[i] = abs(np.array(outputs)[:,0] - np.array(outputs)[:,4])[i] # error in thez-outputs(second)
-    error3[i] = abs(np.array(outputs)[:,1] - np.array(outputs)[:,3])[i]
-    error4[i] = abs(np.array(outputs)[:,1] - np.array(outputs)[:,5])[i]
+        next_time2 += 15
+#    lst1 =  abs(np.array(outputs)[:,0] - np.array(outputs)[:,2])[i] 
+#    lst2 = (np.array(outputs)[:,0])[i]
+#    print lst1/lst2
+    
+    error[i] = abs(np.array(outputs)[:,0] - np.array(outputs)[:,2])[i]/(np.array(outputs)[:,0])[i] # error in the y-outputs(first)
+    error2[i] = abs(np.array(outputs)[:,0] - np.array(outputs)[:,4])[i]/(np.array(outputs)[:,0])[i] # error in thez-outputs(second)
+    error3[i] = abs(np.array(outputs)[:,1] - np.array(outputs)[:,3])[i]/(np.array(outputs)[:,1])[i]
+    error4[i] = abs(np.array(outputs)[:,1] - np.array(outputs)[:,5])[i]/(np.array(outputs)[:,1])[i]
     for k in range(5):
             recent_error_list.append([error[counter - k], error2[counter - k], error3[counter - k], error4[counter - k]])  
     recent_error_list = np.array(recent_error_list)
@@ -253,10 +255,10 @@ for i, t in enumerate(tspan):
     
     quality.append([(1 - np.sum(recent_error_list.T[0])), (1 - np.sum(recent_error_list.T[1])), min_quality])
     residues.append([np.sum(recent_error_list.T[0])**2,np.sum(recent_error_list.T[1])**2,np.sum(recent_error_list.T[2])**2,np.sum(recent_error_list.T[3])**2])
-    if t > 2*nxt:
-        if np.sum(recent_error_list.T[0])**2 <= 0.15:
-            break
-        nxt += T
+#    if t > 2*nxt:
+#        if np.sum(recent_error_list.T[0])**2 <= 0.15:
+#            break
+#        nxt += T
     recent_error_list = []
     counter += 1
     
@@ -313,63 +315,78 @@ for i, t in enumerate(tspan):
     y_list = []
     phi2_T = []
     z_list = []
+#    tlist.append(t)
+#    ilist.append(o)
+    #print t    
+#plot.plot(ilist, tlist, 'k', linewidth = 2.0)
+#plot.xlabel("Time Window", fontsize = 20)
+#plot.ylabel("Convergence Time", fontsize = 20)
 
-print t    
-#print q_sampled.T
-#print np.array([[a],[b],[c],[d],[e],[f]]).T   
-#plot.plot(quality_list) 
-#quality = np.array(quality)
 #my_sumA_inv = np.linalg.inv(my_sumA_1)
 #parameters = np.dot(my_sumA_inv, my_sumA_2)  
 #
 #my_sumB_inv = np.linalg.inv(my_sumB_1)
 #parametersB = np.dot(my_sumB_inv, my_sumB_2) 
-
-#print parameters
-#print parametersB  
-#print aa,bb,cc,dd,ee,ff
+#
+##print parameters
+##print parametersB  
+#
 #writefile(parameters, "off_para1.csv")
 #writefile(parametersB, "off_para2.csv")
-
+#
 #outputs = np.array(outputs)
 #inputs = np.array(inputs)
 ##para_real = np.array(para_real)
 ##para_estim = np.array(para_estim)
+##
+light_online = 1.0
+light_offline = 1.0
+residues = np.array(residues)
+plot.subplot(3,1,2)
 #
-#light_online = 1.0
-#light_offline = 0.7
-#plot.subplot(4,1,1)
-#plot.plot(tspan, outputs[:,0],'b', label = "$y$", linewidth = 1.0)
-##plot.plot(tspan, outputs[:,1], label = "$z$")
-#plot.plot(tspan, outputs[:,2], 'k', label = "$y_{online}$", alpha = light_online, linewidth = 1.0)
-##plot.plot(tspan, outputs[:,3], label = "$z_{online}$", alpha = light_online)
-##plot.plot(tspan, outputs[:,4], label = "$y_{offline}$", alpha = light_offline)
-##plot.plot(tspan, outputs[:,5], label = "$z_{offline}$", alpha = light_offline)
-#plot.ylabel("outputs")
-#plot.legend(loc = 4)
-#plot.subplot(4,1,2)
-#plot.plot(tspan, inputs[:,0],'k', label = "$Controller$ $Output_1$", linewidth = 2.0)
-#plot.subplot(4,1,3)
-#plot.plot(tspan, inputs[:,1], 'k', label = "$Controller$ $Output_2$", linewidth = 2.0)
-##plot.plot(tspan, inputs[:,0], label = "$setpoint_y$")
-##plot.plot(tspan, inputs[:,1], label = "$setpoint_z$")
-#plot.ylabel("Inputs")
-#plot.legend(loc = 4)
-#plot.subplot(4,1,4)
-#plot.plot(tspan, para_estim2, 'r')
-#plot.plot(tspan, para_real2, 'k')
-#plot.ylabel("parameters(y_2)")
-#plot.ylim([0.54,1.22])
-#plot.subplot(4,1,4)
-#plot.plot(tspan, para_estim, 'b')
-#plot.plot(tspan, para_real, 'k')
-#
-#plot.ylabel("parameters(y_1)")
+plot.plot(tspan, outputs[:,1],'k',linewidth = 2.0)
+plot.plot(tspan, outputs[:,3], 'k',label = "$z_{online}$", alpha = light_online, linewidth = 2.0)
+plot.ylabel("$Output_2$", fontsize = 20)
 
-#plot.ylim([-0.5,1.43])
-#plot.subplot(5,1,5)
-#plot.plot(tspan, residues)
-#plot.ylabel("errors")
-#plot.ylim([0,1])
-#plot.xlabel("time")
+plot.subplot(3,1,1)
+plot.plot(tspan, outputs[:,0],'k', label = "$y$", linewidth = 2.0)
+plot.plot(tspan, outputs[:,2], 'k', label = "$y_{online}$", alpha = light_online, linewidth = 2.0)
+#
+##plot.plot(tspan, outputs[:,4], 'k',linewidth = 2.0, label = "$y_{offline}$", alpha = light_offline)
+##plot.plot(tspan, outputs[:,5], label = "$z_{offline}$", alpha = light_offline)
+plot.ylabel("$Output_1$", fontsize = 20)
+###plot.legend(loc = 4)
+##plot.subplot(4,1,3)
+##plot.plot(tspan, inputs[:,0],'k', linewidth = 2.0)
+##plot.ylabel("$Input_1$", fontsize = 20)
+##plot.subplot(4,1,4)
+##plot.plot(tspan, inputs[:,1], 'k', label = "$Controller$ $Output_2$", linewidth = 2.0)
+##plot.ylabel("$Input_2$", fontsize = 20)
+##plot.legend(loc = 4)
+#
+#
+#plot.subplot(4,1,3)
+#plot.plot(tspan, para_estim2, 'k', linewidth = 2.0)
+#plot.plot(tspan, para_real2, 'k--', linewidth = 2.0)
+#plot.ylabel("parameters($y_2$)", fontsize = 20)
+#plot.ylim([-0.67,1.5])
+#
+#
+#plot.subplot(4,1,4)
+#plot.plot(tspan, para_estim, 'k', linewidth = 2.0)
+#plot.plot(tspan, para_real, 'k--', linewidth = 2.0)
+##
+#plot.ylabel("parameters($y_1$)", fontsize = 20)
+#plot.ylim([-0.67,1.5])
+##plot.ylim([-0.5,1.43])
+plot.subplot(3,1,3)
+#
+#
+#
+plot.plot(tspan, residues[:,0],'k',label = "Error in Output_1",linewidth = 2.0)
+plot.plot(tspan, residues[:,2],'k--',label = "Error in Output_2",linewidth = 2.0)
+plot.ylabel("Output Error", fontsize = 20)
+plot.ylim([0,1])
+##plot.legend()
+plot.xlabel("Time", fontsize = 20)
 
