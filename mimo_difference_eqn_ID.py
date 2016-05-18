@@ -147,10 +147,10 @@ my_sumB_1 = np.zeros((6,6))
 my_sumB_2 = np.zeros((6,1))
 
 
-error = np.zeros(len(tspan))
-error2 = np.zeros(len(tspan)) 
-error3 = np.zeros(len(tspan))
-error4 = np.zeros(len(tspan)) 
+error = np.ones(len(tspan))
+error2 = np.ones(len(tspan)) 
+error3 = np.ones(len(tspan))
+error4 = np.ones(len(tspan)) 
 recent_error_list = []
 counter = 0
 quality = []
@@ -159,9 +159,12 @@ residues = []
 nxt = T
 j = 0
 
-amp_2 = 0.02
-amp_1 = 0.08
-mode = 'smart'
+amp_2 = 1
+amp_1 = 0.05
+mode = 'normal'
+
+qi = []
+ti = []
 for i, t in enumerate(tspan):
     
     noise = sigma*np.random.rand()
@@ -185,7 +188,7 @@ for i, t in enumerate(tspan):
     if mode == 'smart':
         if t >= 0 and t <= 15:
             dist  = 0*square_wave(s,t)
-            dist2 = amp_2**square_wave(s2,t)
+            dist2 = amp_2*square_wave(s2,t)
         elif t >15 and t< 30:
             dist  = amp_1*square_wave(s,t)
             dist2 = 0*square_wave(s2,t)
@@ -256,7 +259,7 @@ for i, t in enumerate(tspan):
         q_sampled = Q_t
         q_sampled2 = Q2_t
         
-        next_time2 += 15
+        next_time2 += 20
 #    lst1 =  abs(np.array(outputs)[:,0] - np.array(outputs)[:,2])[i] 
 #    lst2 = (np.array(outputs)[:,0])[i]
 #    print lst1/lst2
@@ -265,6 +268,7 @@ for i, t in enumerate(tspan):
     error2[i] = abs(np.array(outputs)[:,0] - np.array(outputs)[:,4])[i]/(np.array(outputs)[:,0])[i] # error in thez-outputs(second)
     error3[i] = abs(np.array(outputs)[:,1] - np.array(outputs)[:,3])[i]/(np.array(outputs)[:,1])[i]
     error4[i] = abs(np.array(outputs)[:,1] - np.array(outputs)[:,5])[i]/(np.array(outputs)[:,1])[i]
+    
     for k in range(5):
             recent_error_list.append([error[counter - k], error2[counter - k], error3[counter - k], error4[counter - k]])  
     recent_error_list = np.array(recent_error_list)
@@ -273,9 +277,13 @@ for i, t in enumerate(tspan):
     
     quality.append([(1 - np.sum(recent_error_list.T[0])), (1 - np.sum(recent_error_list.T[1])), min_quality])
     residues.append([np.sum(recent_error_list.T[0])**2,np.sum(recent_error_list.T[1])**2,np.sum(recent_error_list.T[2])**2,np.sum(recent_error_list.T[3])**2])
-#    if t > 2*nxt:
-#        if np.sum(recent_error_list.T[0])**2 <= 0.15:
-#            break
+    
+    if t > 4*nxt:
+        #print residues
+        #print max(residues[i])
+        if max(residues[i]) <= 0.1:
+            qi.append([q_sampled, q_sampled2])
+            ti.append(t)
 #        nxt += T
     recent_error_list = []
     counter += 1
@@ -339,7 +347,8 @@ for i, t in enumerate(tspan):
 #plot.plot(ilist, tlist, 'k', linewidth = 2.0)
 #plot.xlabel("Time Window", fontsize = 20)
 #plot.ylabel("Convergence Time", fontsize = 20)
-
+#print qi[0]
+#print ti[0]
 my_sumA_inv = np.linalg.inv(my_sumA_1)
 parameters = np.dot(my_sumA_inv, my_sumA_2)  
 
@@ -352,61 +361,64 @@ parametersB = np.dot(my_sumB_inv, my_sumB_2)
 writefile(parameters, "off_para1.csv")
 writefile(parametersB, "off_para2.csv")
 #
-#outputs = np.array(outputs)
-#inputs = np.array(inputs)
+outputs = np.array(outputs)
+inputs = np.array(inputs)
 ##para_real = np.array(para_real)
 ##para_estim = np.array(para_estim)
 ##
 light_online = 1.0
 light_offline = 1.0
 residues = np.array(residues)
-plot.subplot(4,1,2)
+#plot.subplot(4,1,2)
 #
-plot.plot(tspan, outputs[:,1],'k',linewidth = 1.0)
-plot.plot(tspan, outputs[:,3], 'k',label = "$z_{online}$", alpha = light_online, linewidth = 1.0)
-plot.plot(tspan, outputs[:,5], 'k', label = "$z_{offline}$", alpha = light_offline)
-plot.ylabel("$Output_2$", fontsize = 20)
-
-plot.subplot(4,1,1)
-plot.plot(tspan, outputs[:,0],'k', label = "$y$", linewidth = 1.0)
-plot.plot(tspan, outputs[:,2], 'k', label = "$y_{online}$", alpha = light_online, linewidth = 1.0)
+#plot.plot(tspan, outputs[:,1],'k',linewidth = 2.0)
+#plot.plot(tspan, outputs[:,3], 'k',label = "$z_{online}$", alpha = light_online, linewidth = 2.0)
+#plot.plot(tspan, outputs[:,5], 'k', label = "$z_{offline}$", alpha = light_offline, linewidth = 2.0)
+#plot.ylabel("$Output_2$", fontsize = 20)
 #
-plot.plot(tspan, outputs[:,4], 'k',linewidth = 1.0, label = "$y_{offline}$", alpha = light_offline)
-##plot.plot(tspan, outputs[:,5], label = "$z_{offline}$", alpha = light_offline)
-plot.ylabel("$Output_1$", fontsize = 20)
-##plot.legend(loc = 4)
-#plot.subplot(4,1,3)
+#plot.subplot(4,1,1)
+#plot.plot(tspan, outputs[:,0],'k', label = "$y$", linewidth = 2.0)
+#plot.plot(tspan, outputs[:,2], 'k', label = "$y_{online}$", alpha = light_online, linewidth = 2.0)
+##
+#plot.plot(tspan, outputs[:,4], 'k',linewidth = 2.0, label = "$y_{offline}$", alpha = light_offline)
+###plot.plot(tspan, outputs[:,5], label = "$z_{offline}$", alpha = light_offline)
+#plot.ylabel("$Output_1$", fontsize = 20)
+###plot.legend(loc = 4)
+#plot.subplot(3,1,3)
 #plot.plot(tspan, inputs[:,0],'k', linewidth = 2.0)
-#plot.ylabel("$Input_1$", fontsize = 20)
-#plot.subplot(4,1,4)
+#plot.ylabel("$Inputs$", fontsize = 20)
+###plot.subplot(4,1,4)
 #plot.plot(tspan, inputs[:,1], 'k', label = "$Controller$ $Output_2$", linewidth = 2.0)
-#plot.ylabel("$Input_2$", fontsize = 20)
+#plot.ylabel("$Inputs$", fontsize = 20)
 #plot.legend(loc = 4)
 #
 #
-plot.subplot(4,1,3)
+#plot.subplot(4,1,3
+plot.subplot(2,1,2)
 plot.plot(tspan, para_estim2, 'k', linewidth = 2.0)
 plot.plot(tspan, para_real2, 'k--', linewidth = 2.0)
 plot.ylabel("parameters($y_2$)", fontsize = 20)
 plot.ylim([-0.67,1.5])
+plot.xlabel("Time", fontsize = 20)
+
 #
 #
-plot.subplot(4,1,4)
+plot.subplot(2,1,1)
 plot.plot(tspan, para_estim, 'k', linewidth = 2.0)
 plot.plot(tspan, para_real, 'k--', linewidth = 2.0)
-#
+
 plot.ylabel("parameters($y_1$)", fontsize = 20)
 plot.ylim([-0.67,1.5])
-#plot.ylim([-0.5,1.43])
-#plot.subplot(5,1,5)
-#
-#
-#
+plot.ylim([-0.5,1.43])
+
+##
+##
+##
 #plot.plot(tspan, residues[:,0],'k',label = "Error in Output_1",linewidth = 2.0)
 #plot.plot(tspan, residues[:,2],'k--',label = "Error in Output_2",linewidth = 2.0)
 #plot.plot(tspan, residues[:,1],'k--',label = "Error in Output_2",linewidth = 2.0)
-#plot.ylabel("Output Error", fontsize = 20)
+#plot.ylabel("$Output$ $Error$", fontsize = 20)
 #plot.ylim([0,1])
 ##plot.legend()
-plot.xlabel("Time", fontsize = 20)
+
 
